@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -45,7 +46,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -118,6 +121,37 @@ fun LiquidGlassNavBar(
         label = "navIndicatorX"
     )
 
+    // Liquid stretch factor: elongates in the drag direction and snaps back with bouncy overshoot
+    val dragDelta = if (isDragging && tabWidthPx > 0f) {
+        (targetIndicatorX - animatedIndicatorX) / tabWidthPx
+    } else 0f
+
+    val targetPillScaleX = if (isDragging) {
+        1f + kotlin.math.min(kotlin.math.abs(dragDelta) * 0.8f, 0.3f)
+    } else 1f
+
+    val pillScaleX by animateFloatAsState(
+        targetValue = targetPillScaleX,
+        animationSpec = spring(
+            dampingRatio = if (isDragging) 0.85f else Spring.DampingRatioMediumBouncy,
+            stiffness = if (isDragging) 600f else Spring.StiffnessMedium
+        ),
+        label = "pillScaleX"
+    )
+
+    val targetStreakShift = if (isDragging) {
+        dragDelta.coerceIn(-1f, 1f)
+    } else 0f
+
+    val streakShift by animateFloatAsState(
+        targetValue = targetStreakShift,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "pillStreakShift"
+    )
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -184,26 +218,50 @@ fun LiquidGlassNavBar(
                 val tabWidthDp = with(density) { tabWidthPx.toDp() }
                 val animatedIndicatorXDp = with(density) { animatedIndicatorX.toDp() }
 
-                // 1. Sliding Liquid Glass Background Indicator Pill (Sleeker and centered vertically)
+                // 1. Sliding Liquid Glass Background Indicator Pill (Clean fixed capsule with liquid water feel)
                 if (containerWidth > 0) {
+                    val pillWidthDp = (tabWidthDp - 8.dp).coerceAtLeast(0.dp)
+                    val pivotFractionX = if (dragDelta >= 0f) 0.15f else 0.85f
+
                     Box(
                         modifier = Modifier
-                            .offset(x = animatedIndicatorXDp)
-                            .width(tabWidthDp)
-                            .height(36.dp) // Sleeker, more refined capsule height
+                            .offset(x = animatedIndicatorXDp + 4.dp)
+                            .width(pillWidthDp)
+                            .height(44.dp) // Clean 44dp capsule height, vertically centered in 48dp bar
                             .align(Alignment.CenterStart)
-                            .padding(horizontal = 4.dp)
-                            .clip(RoundedCornerShape(18.dp))
+                            .graphicsLayer {
+                                scaleX = pillScaleX
+                                transformOrigin = TransformOrigin(pivotFractionX, 0.5f)
+                            }
+                            .clip(RoundedCornerShape(22.dp))
                             .background(
-                                if (isLight) theme.primaryAccent.copy(alpha = 0.12f)
-                                else Color.White.copy(alpha = 0.08f)
+                                if (isLight) theme.primaryAccent.copy(alpha = 0.14f)
+                                else Color.White.copy(alpha = 0.10f)
                             )
                             .border(
                                 width = 1.dp,
-                                color = theme.primaryAccent.copy(alpha = 0.30f),
-                                shape = RoundedCornerShape(18.dp)
+                                color = theme.primaryAccent.copy(alpha = 0.32f),
+                                shape = RoundedCornerShape(22.dp)
                             )
-                    )
+                    ) {
+                        // Soft moving specular streak inside pill during drag to sell the water-glass liquid feel
+                        if (isDragging || streakShift != 0f) {
+                            val streakCenterFraction = (0.5f + streakShift * 0.35f).coerceIn(0.1f, 0.9f)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            colorStops = arrayOf(
+                                                (streakCenterFraction - 0.25f).coerceAtLeast(0f) to Color.Transparent,
+                                                streakCenterFraction to (if (isLight) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.22f)),
+                                                (streakCenterFraction + 0.25f).coerceAtMost(1f) to Color.Transparent
+                                            )
+                                        )
+                                    )
+                            )
+                        }
+                    }
                 }
 
                 // 2. Navigation Tabs Foreground Row

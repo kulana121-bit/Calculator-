@@ -274,18 +274,40 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
 
     fun onInput(charOrFunc: String) {
         val currentExp = _uiState.value.expression
-        val operators = setOf("+", "-", "−", "×", "÷", "^", ".")
-        val isNewOperator = charOrFunc in operators
+        val operatorChars = setOf('+', '-', '−', '×', '÷', '^', '.')
+        val isNewBinaryOp = charOrFunc in setOf("+", "-", "−", "×", "÷", "^")
 
         var baseExp = currentExp
-        if (isNewOperator && currentExp.isNotEmpty()) {
-            val lastChar = currentExp.last().toString()
-            if (lastChar in operators) {
-                val isNegativeAfterMulDiv = (charOrFunc == "-" || charOrFunc == "−") && (lastChar == "×" || lastChar == "÷")
-                if (!isNegativeAfterMulDiv) {
-                    baseExp = currentExp.dropLast(1)
+        if (isNewBinaryOp) {
+            if (currentExp.isEmpty()) {
+                if (charOrFunc == "-" || charOrFunc == "−") {
+                    baseExp = charOrFunc
+                }
+                _uiState.update { it.copy(expression = baseExp, isError = false, errorMessage = "") }
+                recomputeLiveResult()
+                return
+            }
+
+            var clusterLen = 0
+            while (clusterLen < currentExp.length && currentExp[currentExp.length - 1 - clusterLen] in operatorChars) {
+                clusterLen++
+            }
+
+            if (clusterLen == 0) {
+                baseExp = "$currentExp$charOrFunc"
+            } else {
+                val cluster = currentExp.takeLast(clusterLen)
+                if ((charOrFunc == "-" || charOrFunc == "−") && (cluster == "×" || cluster == "÷")) {
+                    baseExp = "$currentExp$charOrFunc"
+                } else {
+                    val stripped = currentExp.dropLast(clusterLen)
+                    baseExp = "$stripped$charOrFunc"
                 }
             }
+
+            _uiState.update { it.copy(expression = baseExp, isError = false, errorMessage = "") }
+            recomputeLiveResult()
+            return
         }
 
         if (charOrFunc == "%") {
