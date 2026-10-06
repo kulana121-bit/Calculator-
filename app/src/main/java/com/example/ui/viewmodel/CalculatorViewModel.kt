@@ -137,7 +137,6 @@ data class CalculatorUiState(
     val hapticFeedbackEnabled: Boolean = true,
     val soundEnabled: Boolean = false,
     val currentLanguage: String = "English",
-    val showSplash: Boolean = true,
     val isSettingsOpen: Boolean = false,
     val isThemesOpen: Boolean = false,
     val isAboutOpen: Boolean = false
@@ -1155,10 +1154,6 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     fun setLanguage(lang: String) {
         prefs.edit().putString("pref_language", lang).apply()
         _uiState.update { it.copy(currentLanguage = lang) }
-    }
-
-    fun dismissSplash() {
-        _uiState.update { it.copy(showSplash = false) }
     }
 
     fun openSettings() {

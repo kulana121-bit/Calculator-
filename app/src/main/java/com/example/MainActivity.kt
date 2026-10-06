@@ -45,7 +45,6 @@ import com.example.ui.screens.CalculatorScreen
 import com.example.ui.screens.CurrencyScreen
 import com.example.ui.screens.HistoryScreen
 import com.example.ui.screens.SettingsScreen
-import com.example.ui.screens.SplashScreen
 import com.example.ui.screens.ThemeScreen
 import com.example.ui.screens.ToolsScreen
 import com.example.ui.screens.UnitConverterScreen
@@ -119,7 +118,6 @@ class MainActivity : ComponentActivity() {
                 ) {
                     LiquidGlassBackground(theme = state.theme) {
                     val overlayScreen = when {
-                        state.showSplash -> "SPLASH"
                         state.isAboutOpen -> "ABOUT"
                         state.isThemesOpen -> "THEMES"
                         state.isSettingsOpen -> "SETTINGS"
@@ -144,12 +142,6 @@ class MainActivity : ComponentActivity() {
                         label = "MainOverlayTransition"
                     ) { screen ->
                         when (screen) {
-                            "SPLASH" -> {
-                                SplashScreen(
-                                    theme = state.theme,
-                                    onDismiss = { viewModel.dismissSplash() }
-                                )
-                            }
                             "ABOUT" -> {
                                 AboutScreen(
                                     theme = state.theme,
