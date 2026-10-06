@@ -274,6 +274,47 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
 
     fun onInput(charOrFunc: String) {
         val currentExp = _uiState.value.expression
+
+        // Power feature: ANS inserts the last evaluated result (or liveResult fallback)
+        if (charOrFunc == "ANS") {
+            val ans = _uiState.value.evaluatedResult.ifEmpty { _uiState.value.liveResult }
+            if (ans.isNotEmpty() && ans != "Error") {
+                viewModelScope.launch {
+                    _toastEvent.emit("ANS inserted")
+                }
+                val newExp = "$currentExp$ans"
+                _uiState.update { it.copy(expression = newExp, isError = false, errorMessage = "") }
+                recomputeLiveResult()
+            }
+            return
+        }
+
+        // Dedicated Decimal Point handling (NOT a binary op; dedup within current number)
+        if (charOrFunc == ".") {
+            val prevChars = setOf('+', '-', '−', '×', '÷', '^', '(')
+            if (currentExp.isEmpty() || currentExp.last() in prevChars) {
+                val newExp = "${currentExp}0."
+                _uiState.update { it.copy(expression = newExp, isError = false, errorMessage = "") }
+                recomputeLiveResult()
+                return
+            }
+
+            var numLen = 0
+            while (numLen < currentExp.length && (currentExp[currentExp.length - 1 - numLen].isDigit() || currentExp[currentExp.length - 1 - numLen] == '.')) {
+                numLen++
+            }
+            val currentLiteral = currentExp.takeLast(numLen)
+            if (currentLiteral.contains(".")) {
+                // Ignore duplicate decimal point in current numeric literal
+                return
+            }
+
+            val newExp = "$currentExp."
+            _uiState.update { it.copy(expression = newExp, isError = false, errorMessage = "") }
+            recomputeLiveResult()
+            return
+        }
+
         val operatorChars = setOf('+', '-', '−', '×', '÷', '^', '.')
         val isNewBinaryOp = charOrFunc in setOf("+", "-", "−", "×", "÷", "^")
 

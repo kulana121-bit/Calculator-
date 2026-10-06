@@ -706,6 +706,7 @@ private fun StandardKeypad(
             LiquidGlassButton(
                 text = "⌫",
                 onClick = { viewModel.onBackspace() },
+                onLongClick = { viewModel.onClear() },
                 theme = theme,
                 type = CalcButtonType.FUNCTION,
                 fontSize = 20.sp,
@@ -877,6 +878,7 @@ private fun StandardKeypad(
             LiquidGlassButton(
                 text = "=",
                 onClick = { viewModel.onEquals() },
+                onLongClick = { viewModel.onInput("ANS") },
                 theme = theme,
                 type = CalcButtonType.EQUALS,
                 fontSize = 30.sp,

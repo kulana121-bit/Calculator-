@@ -4,9 +4,11 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -49,6 +51,7 @@ enum class CalcButtonType {
     MEMORY
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LiquidGlassButton(
     text: String,
@@ -61,7 +64,8 @@ fun LiquidGlassButton(
     shape: Shape = RoundedCornerShape(26.dp),
     testTag: String = text.lowercase(),
     vibrationEnabled: Boolean = LocalVibrationEnabled.current,
-    soundEnabled: Boolean = LocalSoundEnabled.current
+    soundEnabled: Boolean = LocalSoundEnabled.current,
+    onLongClick: (() -> Unit)? = null
 ) {
     val haptic = LocalHapticFeedback.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -104,11 +108,11 @@ fun LiquidGlassButton(
         CalcButtonType.OPERATOR -> {
             if (isLight) {
                 ButtonColors(
-                    bg = Color(0xFFFFEDE0),
-                    text = Color(0xFFFF7A00),
-                    border = Color(0x1AFF7A00),
+                    bg = theme.buttonOpColor,
+                    text = theme.primaryAccent,
+                    border = theme.primaryAccent.copy(alpha = 0.20f),
                     elevation = 3.dp,
-                    shadow = Color(0x14FF7A00)
+                    shadow = theme.primaryAccent.copy(alpha = 0.12f)
                 )
             } else {
                 ButtonColors(
@@ -141,11 +145,11 @@ fun LiquidGlassButton(
         }
         CalcButtonType.EQUALS -> {
             ButtonColors(
-                bg = theme.buttonActionColor,
+                bg = theme.primaryAccent,
                 text = Color.White,
                 border = Color.Transparent,
                 elevation = 6.dp,
-                shadow = theme.buttonActionColor.copy(alpha = 0.5f)
+                shadow = theme.primaryAccent.copy(alpha = 0.5f)
             )
         }
     }
@@ -173,19 +177,50 @@ fun LiquidGlassButton(
                 border = BorderStroke(1.dp, borderColor),
                 shape = shape
             )
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = {
-                    if (vibrationEnabled) {
-                        com.example.util.VibrationHelper.tick(context)
-                    } else {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                    }
-                    if (soundEnabled) {
-                        view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
-                    }
-                    onClick()
+            .then(
+                if (onLongClick != null) {
+                    Modifier.combinedClickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = {
+                            if (vibrationEnabled) {
+                                com.example.util.VibrationHelper.tick(context)
+                            } else {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            }
+                            if (soundEnabled) {
+                                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                            }
+                            onClick()
+                        },
+                        onLongClick = {
+                            if (vibrationEnabled) {
+                                com.example.util.VibrationHelper.vibratePattern(context, longArrayOf(0, 30, 40, 30))
+                            } else {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            }
+                            if (soundEnabled) {
+                                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                            }
+                            onLongClick()
+                        }
+                    )
+                } else {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = {
+                            if (vibrationEnabled) {
+                                com.example.util.VibrationHelper.tick(context)
+                            } else {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            }
+                            if (soundEnabled) {
+                                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                            }
+                            onClick()
+                        }
+                    )
                 }
             )
             .testTag(testTag),
