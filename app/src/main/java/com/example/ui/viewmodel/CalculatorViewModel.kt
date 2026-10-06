@@ -44,6 +44,7 @@ data class CalculatorUiState(
     val evaluatedResult: String = "",
     val angleMode: ExpressionEvaluator.AngleMode = ExpressionEvaluator.AngleMode.DEG,
     val isScientificExpanded: Boolean = false,
+    val isProgrammerMode: Boolean = false,
     val memoryValue: Double = 0.0,
     val hasMemory: Boolean = false,
     val isError: Boolean = false,
@@ -258,7 +259,23 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     // Calculator Operations
     // ----------------------------------------------------
     fun toggleScientific() {
-        _uiState.update { it.copy(isScientificExpanded = !it.isScientificExpanded) }
+        _uiState.update {
+            val newSci = !it.isScientificExpanded
+            it.copy(
+                isScientificExpanded = newSci,
+                isProgrammerMode = if (newSci) false else it.isProgrammerMode
+            )
+        }
+    }
+
+    fun toggleProgrammerMode() {
+        _uiState.update {
+            val newProg = !it.isProgrammerMode
+            it.copy(
+                isProgrammerMode = newProg,
+                isScientificExpanded = if (newProg) false else it.isScientificExpanded
+            )
+        }
     }
 
     fun toggleAngleMode() {
@@ -272,6 +289,41 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         recomputeLiveResult()
     }
 
+    private fun sanitizeTrailingOperators(exp: String): String {
+        var result = exp
+        val opSet = setOf('+', '-', '−', '×', '÷', '^', '.')
+        while (true) {
+            var count = 0
+            while (count < result.length && result[result.length - 1 - count] in opSet) {
+                count++
+            }
+            if (count >= 2) {
+                val trailing = result.takeLast(count)
+                if (trailing == "×-" || trailing == "×−" || trailing == "÷-" || trailing == "÷−") {
+                    break
+                } else {
+                    result = result.dropLast(1)
+                }
+            } else {
+                break
+            }
+        }
+        return result
+    }
+
+    fun setScannedExpression(raw: String) {
+        val sanitized = sanitizeTrailingOperators(raw)
+        _uiState.update {
+            it.copy(
+                expression = sanitized,
+                isError = false,
+                errorMessage = ""
+            )
+        }
+        recomputeLiveResult()
+        onEquals()
+    }
+
     fun onInput(charOrFunc: String) {
         val currentExp = _uiState.value.expression
 
@@ -282,8 +334,9 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
                 viewModelScope.launch {
                     _toastEvent.emit("ANS inserted")
                 }
-                val newExp = "$currentExp$ans"
-                _uiState.update { it.copy(expression = newExp, isError = false, errorMessage = "") }
+                val rawExp = "$currentExp$ans"
+                val sanitized = sanitizeTrailingOperators(rawExp)
+                _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
                 recomputeLiveResult()
             }
             return
@@ -293,8 +346,9 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         if (charOrFunc == ".") {
             val prevChars = setOf('+', '-', '−', '×', '÷', '^', '(')
             if (currentExp.isEmpty() || currentExp.last() in prevChars) {
-                val newExp = "${currentExp}0."
-                _uiState.update { it.copy(expression = newExp, isError = false, errorMessage = "") }
+                val rawExp = "${currentExp}0."
+                val sanitized = sanitizeTrailingOperators(rawExp)
+                _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
                 recomputeLiveResult()
                 return
             }
@@ -309,14 +363,15 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
                 return
             }
 
-            val newExp = "$currentExp."
-            _uiState.update { it.copy(expression = newExp, isError = false, errorMessage = "") }
+            val rawExp = "$currentExp."
+            val sanitized = sanitizeTrailingOperators(rawExp)
+            _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
             recomputeLiveResult()
             return
         }
 
         val operatorChars = setOf('+', '-', '−', '×', '÷', '^', '.')
-        val isNewBinaryOp = charOrFunc in setOf("+", "-", "−", "×", "÷", "^")
+        val isNewBinaryOp = charOrFunc in setOf("+", "-", "−", "×", "÷", "^", "AND", "OR", "XOR", "<<", ">>")
 
         var baseExp = currentExp
         if (isNewBinaryOp) {
@@ -324,7 +379,8 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
                 if (charOrFunc == "-" || charOrFunc == "−") {
                     baseExp = charOrFunc
                 }
-                _uiState.update { it.copy(expression = baseExp, isError = false, errorMessage = "") }
+                val sanitized = sanitizeTrailingOperators(baseExp)
+                _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
                 recomputeLiveResult()
                 return
             }
@@ -346,7 +402,8 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
 
-            _uiState.update { it.copy(expression = baseExp, isError = false, errorMessage = "") }
+            val sanitized = sanitizeTrailingOperators(baseExp)
+            _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
             recomputeLiveResult()
             return
         }
@@ -357,8 +414,8 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
             if (last in setOf('+', '-', '−', '×', '÷', '^', '(', '%')) return
         }
 
-        val newExp = when (charOrFunc) {
-            "sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "sqrt", "cbrt", "abs" -> {
+        val rawExp = when (charOrFunc) {
+            "sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "sqrt", "cbrt", "abs", "NOT" -> {
                 "$baseExp$charOrFunc("
             }
             "1/x" -> {
@@ -377,7 +434,8 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
             else -> "$baseExp$charOrFunc"
         }
 
-        _uiState.update { it.copy(expression = newExp, isError = false, errorMessage = "") }
+        val sanitized = sanitizeTrailingOperators(rawExp)
+        _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
         recomputeLiveResult()
     }
 

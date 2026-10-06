@@ -21,7 +21,7 @@ object ExpressionEvaluator {
 
     private val FUNCTIONS = setOf(
         "sin", "cos", "tan", "asin", "acos", "atan",
-        "log", "ln", "sqrt", "cbrt", "abs", "fact"
+        "log", "ln", "sqrt", "cbrt", "abs", "fact", "NOT"
     )
 
     fun evaluate(expression: String, angleMode: AngleMode = AngleMode.DEG): EvalResult {
@@ -106,7 +106,21 @@ object ExpressionEvaluator {
                 continue
             }
 
-            // Word or Constant or Function (sin, cos, tan, log, ln, sqrt, cbrt, abs, PI, E)
+            // Check shift operators << and >>
+            if (c == '<' && i + 1 < n && input[i + 1] == '<') {
+                tokens.add("<<")
+                prevToken = "<<"
+                i += 2
+                continue
+            }
+            if (c == '>' && i + 1 < n && input[i + 1] == '>') {
+                tokens.add(">>")
+                prevToken = ">>"
+                i += 2
+                continue
+            }
+
+            // Word or Constant or Function (sin, cos, tan, log, ln, sqrt, cbrt, abs, PI, E, AND, OR, XOR, NOT)
             if (c.isLetter()) {
                 val sb = StringBuilder()
                 while (i < n && input[i].isLetter()) {
@@ -119,6 +133,9 @@ object ExpressionEvaluator {
                     if (prevToken != null && (prevToken.isNumber() || prevToken == ")" || prevToken == "PI" || prevToken == "E" || prevToken == "!")) {
                         tokens.add("*")
                     }
+                    tokens.add(word)
+                    prevToken = word
+                } else if (word == "AND" || word == "OR" || word == "XOR") {
                     tokens.add(word)
                     prevToken = word
                 } else if (FUNCTIONS.contains(word)) {
@@ -393,6 +410,7 @@ object ExpressionEvaluator {
             "cbrt" -> cbrt(arg)
             "abs" -> abs(arg)
             "fact" -> factorial(arg)
+            "NOT" -> (arg.toLong().inv()).toDouble()
             else -> throw IllegalArgumentException("Unknown function $func")
         }
     }
@@ -407,6 +425,11 @@ object ExpressionEvaluator {
                 a / b
             }
             "^" -> a.pow(b)
+            "AND" -> (a.toLong() and b.toLong()).toDouble()
+            "OR" -> (a.toLong() or b.toLong()).toDouble()
+            "XOR" -> (a.toLong() xor b.toLong()).toDouble()
+            "<<" -> (a.toLong() shl b.toInt()).toDouble()
+            ">>" -> (a.toLong() shr b.toInt()).toDouble()
             else -> throw IllegalArgumentException("Unknown operator $op")
         }
     }
@@ -448,15 +471,18 @@ object ExpressionEvaluator {
     }
 
     private fun isOperator(token: String): Boolean {
-        return token == "+" || token == "-" || token == "*" || token == "/" || token == "^"
+        return token == "+" || token == "-" || token == "*" || token == "/" || token == "^" ||
+                token == "AND" || token == "OR" || token == "XOR" || token == "<<" || token == ">>"
     }
 
     private fun precedence(op: String): Int {
         return when (op) {
-            "^" -> 5
-            "u-" -> 4
-            "*", "/" -> 3
-            "+", "-" -> 2
+            "^" -> 6
+            "u-" -> 5
+            "*", "/" -> 4
+            "+", "-" -> 3
+            "<<", ">>" -> 2
+            "AND", "OR", "XOR" -> 1
             else -> 0
         }
     }

@@ -78,4 +78,11 @@
     <string name="about_title">Acerca de Calculator</string>
     <string name="about_tagline">Precisión y elegancia</string>
     <string name="about_description">Diseñado con glassmorphism líquido, interacciones de resorte físicas y respuesta háptica.</string>
+
+    <!-- Round 5 Features -->
+    <string name="camera_permission_denied">Se necesita permiso de cámara para escanear expresiones.</string>
+    <string name="no_math_recognized">No se reconoció ninguna expresión matemática.</string>
+    <string name="scan_math_tooltip">Escanear expresión con cámara</string>
+    <string name="mode_programmer">Programador</string>
+    <string name="widget_description">Calculadora rápida y elegante en tu pantalla de inicio</string>
 </resources>

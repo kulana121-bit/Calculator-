@@ -78,4 +78,11 @@
     <string name="about_title">Über Calculator</string>
     <string name="about_tagline">Präzision &amp; Eleganz</string>
     <string name="about_description">Entwickelt mit flüssigem Glassmorphismus, physikalischen Federeffekten und haptischem Feedback.</string>
+
+    <!-- Round 5 Features -->
+    <string name="camera_permission_denied">Kameraberechtigung ist zum Scannen von mathematischen Ausdrücken erforderlich.</string>
+    <string name="no_math_recognized">Kein mathematischer Ausdruck im Bild erkannt.</string>
+    <string name="scan_math_tooltip">Mathematischen Ausdruck mit Kamera scannen</string>
+    <string name="mode_programmer">Programmierer</string>
+    <string name="widget_description">Schneller und eleganter Rechner auf Ihrem Startbildschirm</string>
 </resources>

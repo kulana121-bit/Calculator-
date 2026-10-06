@@ -1,5 +1,12 @@
 package com.example.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -41,6 +48,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
@@ -63,6 +71,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -70,6 +79,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.engine.ExpressionEvaluator
 import com.example.ui.components.AppNavTab
 import com.example.ui.components.CalcButtonType
@@ -78,6 +88,9 @@ import com.example.ui.components.LiquidGlassCard
 import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.CalculatorUiState
 import com.example.ui.viewmodel.CalculatorViewModel
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -91,9 +104,62 @@ fun CalculatorScreen(
     val expScrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var showModeDropdown by remember { mutableStateOf(false) }
     var showCopiedToast by remember { mutableStateOf(false) }
+
+    // Camera Scan Solve setup (fully on-device via ML Kit Text Recognition)
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            try {
+                val image = InputImage.fromBitmap(bitmap, 0)
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                recognizer.process(image)
+                    .addOnSuccessListener { visionText ->
+                        val raw = visionText.text
+                        val cleaned = normalizeMathExpression(raw)
+                        if (cleaned.isNotBlank()) {
+                            viewModel.setScannedExpression(cleaned)
+                            Toast.makeText(context, "Scanned: $cleaned", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "No math expression recognized", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(context, "Recognition failed: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error processing image", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission is required to scan equations", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val onScanClick: () -> Unit = {
+        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            cameraLauncher.launch(null)
+        } else {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
@@ -116,7 +182,8 @@ fun CalculatorScreen(
                     viewModel = viewModel,
                     haptic = haptic,
                     showModeDropdown = showModeDropdown,
-                    onShowModeDropdown = { showModeDropdown = it }
+                    onShowModeDropdown = { showModeDropdown = it },
+                    onScanClick = onScanClick
                 )
                 
                 CalculatorDisplay(
@@ -139,7 +206,19 @@ fun CalculatorScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                if (state.isScientificExpanded) {
+                if (state.isProgrammerMode) {
+                    ProgrammerConversions(
+                        state = state,
+                        theme = theme,
+                        viewModel = viewModel
+                    )
+                    ProgrammerBitwiseKeypad(
+                        theme = theme,
+                        viewModel = viewModel,
+                        buttonHeight = 36.dp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                } else if (state.isScientificExpanded) {
                     ScientificKeypad(
                         theme = theme,
                         viewModel = viewModel,
@@ -170,7 +249,8 @@ fun CalculatorScreen(
                 viewModel = viewModel,
                 haptic = haptic,
                 showModeDropdown = showModeDropdown,
-                onShowModeDropdown = { showModeDropdown = it }
+                onShowModeDropdown = { showModeDropdown = it },
+                onScanClick = onScanClick
             )
 
             CalculatorDisplay(
@@ -185,7 +265,18 @@ fun CalculatorScreen(
                 modifier = Modifier.weight(1f, fill = false)
             )
 
-            if (state.isScientificExpanded) {
+            if (state.isProgrammerMode) {
+                ProgrammerConversions(
+                    state = state,
+                    theme = theme,
+                    viewModel = viewModel
+                )
+                ProgrammerBitwiseKeypad(
+                    theme = theme,
+                    viewModel = viewModel,
+                    buttonHeight = 42.dp
+                )
+            } else if (state.isScientificExpanded) {
                 ScientificKeypad(
                     theme = theme,
                     viewModel = viewModel,
@@ -197,8 +288,149 @@ fun CalculatorScreen(
                 state = state,
                 theme = theme,
                 viewModel = viewModel,
-                buttonHeight = 62.dp,
-                spacing = 10.dp
+                buttonHeight = if (state.isProgrammerMode || state.isScientificExpanded) 52.dp else 62.dp,
+                spacing = if (state.isProgrammerMode || state.isScientificExpanded) 6.dp else 10.dp
+            )
+        }
+    }
+}
+
+private fun normalizeMathExpression(raw: String): String {
+    val trimmed = raw.trim()
+    val mapped = trimmed
+        .replace("×", "*")
+        .replace("x", "*", ignoreCase = true)
+        .replace("X", "*")
+        .replace("÷", "/")
+        .replace(":", "/")
+        .replace("−", "-")
+        .replace("—", "-")
+        .replace("–", "-")
+        .replace(" ", "")
+        .replace("\n", "")
+
+    val sb = StringBuilder()
+    for (ch in mapped) {
+        if (ch.isDigit() || ch in "+-*/^().%") {
+            sb.append(
+                when (ch) {
+                    '*' -> '×'
+                    '/' -> '÷'
+                    '-' -> '−'
+                    else -> ch
+                }
+            )
+        }
+    }
+    return sb.toString()
+}
+
+@Composable
+private fun ProgrammerConversions(
+    state: CalculatorUiState,
+    theme: ThemeMode,
+    viewModel: CalculatorViewModel
+) {
+    val rawValue = state.evaluatedResult.ifEmpty { state.liveResult }
+    val numValue = rawValue.toDoubleOrNull()?.toLong() ?: 0L
+    val context = LocalContext.current
+
+    val hex = java.lang.Long.toHexString(numValue).uppercase(java.util.Locale.US)
+    val dec = numValue.toString()
+    val oct = java.lang.Long.toOctalString(numValue)
+    val bin = java.lang.Long.toBinaryString(numValue)
+
+    LiquidGlassCard(
+        theme = theme,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            ProgrammerBaseRow("HEX", hex, theme) {
+                viewModel.copyToClipboard(hex)
+                Toast.makeText(context, "Copied HEX: $hex", Toast.LENGTH_SHORT).show()
+            }
+            ProgrammerBaseRow("DEC", dec, theme) {
+                viewModel.copyToClipboard(dec)
+                Toast.makeText(context, "Copied DEC: $dec", Toast.LENGTH_SHORT).show()
+            }
+            ProgrammerBaseRow("OCT", oct, theme) {
+                viewModel.copyToClipboard(oct)
+                Toast.makeText(context, "Copied OCT: $oct", Toast.LENGTH_SHORT).show()
+            }
+            ProgrammerBaseRow("BIN", bin, theme) {
+                viewModel.copyToClipboard(bin)
+                Toast.makeText(context, "Copied BIN: $bin", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProgrammerBaseRow(
+    baseLabel: String,
+    value: String,
+    theme: ThemeMode,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp, horizontal = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = baseLabel,
+            color = theme.primaryAccent,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace
+        )
+        Text(
+            text = value,
+            color = theme.textPrimary,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = FontFamily.Monospace,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun ProgrammerBitwiseKeypad(
+    theme: ThemeMode,
+    viewModel: CalculatorViewModel,
+    buttonHeight: androidx.compose.ui.unit.Dp = 42.dp
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        val bitwiseOps = listOf("AND", "OR", "XOR", "NOT", "<<", ">>")
+        for (op in bitwiseOps) {
+            LiquidGlassButton(
+                text = op,
+                onClick = { viewModel.onInput(op) },
+                theme = theme,
+                type = CalcButtonType.FUNCTION,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(buttonHeight)
+                    .testTag("btn_bitwise_$op")
             )
         }
     }
@@ -211,7 +443,8 @@ private fun CalculatorTopBar(
     viewModel: CalculatorViewModel,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     showModeDropdown: Boolean,
-    onShowModeDropdown: (Boolean) -> Unit
+    onShowModeDropdown: (Boolean) -> Unit,
+    onScanClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -220,7 +453,7 @@ private fun CalculatorTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Mode selector: "Standard ▾"
+        // Mode selector: "Standard ▾", "Scientific ▾", "Programmer ▾"
         Box {
             Row(
                 modifier = Modifier
@@ -238,8 +471,13 @@ private fun CalculatorTopBar(
                     .testTag("mode_selector_btn"),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val modeTitle = when {
+                    state.isProgrammerMode -> "Programmer"
+                    state.isScientificExpanded -> "Scientific"
+                    else -> "Standard"
+                }
                 Text(
-                    text = if (state.isScientificExpanded) "Scientific" else "Standard",
+                    text = modeTitle,
                     color = theme.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold
@@ -260,14 +498,16 @@ private fun CalculatorTopBar(
             ) {
                 DropdownMenuItem(
                     text = {
+                        val isStandard = !state.isScientificExpanded && !state.isProgrammerMode
                         Text(
                             "Standard",
-                            fontWeight = if (!state.isScientificExpanded) FontWeight.Bold else FontWeight.Normal,
-                            color = if (!state.isScientificExpanded) theme.primaryAccent else theme.textPrimary
+                            fontWeight = if (isStandard) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isStandard) theme.primaryAccent else theme.textPrimary
                         )
                     },
                     onClick = {
                         if (state.isScientificExpanded) viewModel.toggleScientific()
+                        if (state.isProgrammerMode) viewModel.toggleProgrammerMode()
                         onShowModeDropdown(false)
                     }
                 )
@@ -284,10 +524,23 @@ private fun CalculatorTopBar(
                         onShowModeDropdown(false)
                     }
                 )
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "Programmer",
+                            fontWeight = if (state.isProgrammerMode) FontWeight.Bold else FontWeight.Normal,
+                            color = if (state.isProgrammerMode) theme.primaryAccent else theme.textPrimary
+                        )
+                    },
+                    onClick = {
+                        if (!state.isProgrammerMode) viewModel.toggleProgrammerMode()
+                        onShowModeDropdown(false)
+                    }
+                )
             }
         }
 
-        // History icon & Settings icon
+        // Top bar right actions: DEG/RAD toggle, Scan button, History icon & Settings icon
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -312,6 +565,24 @@ private fun CalculatorTopBar(
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+
+            // Camera Scan Button (Camera Icon)
+            IconButton(
+                onClick = onScanClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
+                    .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
+                    .testTag("calculator_scan_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = "Scan Equation",
+                    tint = theme.textPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
 
             IconButton(

@@ -78,4 +78,11 @@
     <string name="about_title">À propos de Calculator</string>
     <string name="about_tagline">Précision et élégance</string>
     <string name="about_description">Conçu avec un verre liquide, des animations fluides et un retour haptique tactile.</string>
+
+    <!-- Round 5 Features -->
+    <string name="camera_permission_denied">L\'autorisation de l\'appareil photo est requise pour numériser les calculs.</string>
+    <string name="no_math_recognized">Aucune expression mathématique reconnue dans l\'image.</string>
+    <string name="scan_math_tooltip">Scanner une expression avec l\'appareil photo</string>
+    <string name="mode_programmer">Programmeur</string>
+    <string name="widget_description">Calculatrice rapide et épurée sur votre écran d\'accueil</string>
 </resources>

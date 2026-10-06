@@ -78,4 +78,11 @@
     <string name="about_title">Calculator के बारे में</string>
     <string name="about_tagline">सटीकता और सुंदरता</string>
     <string name="about_description">लिक्विड ग्लासमॉर्फिज़्म, सहज स्प्रिंग एनिमेशन और हैप्टिक फ़ीडबैक के साथ डिज़ाइन किया गया।</string>
+
+    <!-- Round 5 Features -->
+    <string name="camera_permission_denied">गणितीय समीकरण स्कैन करने के लिए कैमरा अनुमति आवश्यक है।</string>
+    <string name="no_math_recognized">छवि में कोई गणितीय समीकरण नहीं मिला।</string>
+    <string name="scan_math_tooltip">कैमरा से समीकरण स्कैन करें</string>
+    <string name="mode_programmer">प्रोग्रामर</string>
+    <string name="widget_description">आपकी होम स्क्रीन पर त्वरित और सुंदर कैलकुलेटर</string>
 </resources>

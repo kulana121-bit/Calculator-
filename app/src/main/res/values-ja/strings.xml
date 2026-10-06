@@ -78,4 +78,11 @@
     <string name="about_title">Calculatorについて</string>
     <string name="about_tagline">正確さと優雅さ</string>
     <string name="about_description">リキッドグラスモーフィズム、物理スプリングアニメーション、触覚フィードバックで設計されています。</string>
+
+    <!-- Round 5 Features -->
+    <string name="camera_permission_denied">数式をスキャンするにはカメラの許可が必要です。</string>
+    <string name="no_math_recognized">画像から数式が認識されませんでした。</string>
+    <string name="scan_math_tooltip">カメラで数式をスキャン</string>
+    <string name="mode_programmer">プログラマー</string>
+    <string name="widget_description">ホーム画面の高速で洗練された計算機</string>
 </resources>
