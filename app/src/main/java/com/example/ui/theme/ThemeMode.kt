@@ -40,7 +40,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
 
@@ -152,7 +152,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     ONE_UI_MINT(
@@ -170,7 +170,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     ONE_UI_MINT_LIGHT(
@@ -188,7 +188,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     IOS_DARK(
@@ -224,7 +224,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     TITANIUM_DARK(
@@ -278,7 +278,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     DEEP_OCEAN(
@@ -314,7 +314,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     ROSE_GOLD(
@@ -332,7 +332,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     AMOLED_BLACK(

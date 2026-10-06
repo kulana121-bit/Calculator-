@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,7 +71,7 @@ fun LiquidGlassButton(
 
     // Tactile physical press spring animation
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.93f else 1.0f,
+        targetValue = if (isPressed) 0.96f else 1.0f,
         animationSpec = spring(
             dampingRatio = 0.65f,
             stiffness = Spring.StiffnessMedium
@@ -151,6 +152,7 @@ fun LiquidGlassButton(
 
     Box(
         modifier = modifier
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale

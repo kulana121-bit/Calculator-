@@ -69,20 +69,20 @@ fun SplashScreen(
     )
 
     LaunchedEffect(Unit) {
-        // Smooth entrance
+        // Smooth entrance (reduced total splash time to ~1.2s)
         alphaAnim.animateTo(
             targetValue = 1f,
-            animationSpec = tween(700, easing = FastOutSlowInEasing)
+            animationSpec = tween(280, easing = FastOutSlowInEasing)
         )
         scaleAnim.animateTo(
             targetValue = 1f,
-            animationSpec = tween(800, easing = FastOutSlowInEasing)
+            animationSpec = tween(320, easing = FastOutSlowInEasing)
         )
         progressAnim.animateTo(
             targetValue = 1f,
-            animationSpec = tween(1400, easing = LinearEasing)
+            animationSpec = tween(500, easing = LinearEasing)
         )
-        delay(300)
+        delay(100)
         onDismiss()
     }
 

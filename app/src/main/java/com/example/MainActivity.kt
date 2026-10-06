@@ -83,102 +83,134 @@ class MainActivity : ComponentActivity() {
                     com.example.ui.components.LocalSoundEnabled provides state.soundEnabled
                 ) {
                     LiquidGlassBackground(theme = state.theme) {
-                    if (state.showSplash) {
-                        SplashScreen(
-                            theme = state.theme,
-                            onDismiss = { viewModel.dismissSplash() }
-                        )
-                    } else if (state.isAboutOpen) {
-                        AboutScreen(
-                            theme = state.theme,
-                            onBack = { viewModel.closeAbout() }
-                        )
-                    } else if (state.isThemesOpen) {
-                        ThemeScreen(
-                            currentTheme = state.theme,
-                            viewModel = viewModel,
-                            onBack = { viewModel.closeThemes() }
-                        )
-                    } else if (state.isSettingsOpen) {
-                        SettingsScreen(
-                            state = state,
-                            viewModel = viewModel,
-                            onBack = { viewModel.closeSettings() }
-                        )
-                    } else {
-                        Scaffold(
-                            modifier = Modifier.fillMaxSize(),
-                            contentWindowInsets = WindowInsets.statusBars,
-                            containerColor = Color.Transparent,
-                            contentColor = state.theme.textPrimary,
-                            snackbarHost = {
-                                SnackbarHost(
-                                    hostState = snackbarHostState,
-                                    modifier = Modifier.padding(bottom = 80.dp)
-                                )
-                            },
-                            bottomBar = {
-                                LiquidGlassNavBar(
-                                    selectedTab = state.currentTab,
-                                    onTabSelected = { viewModel.selectTab(it) },
-                                    theme = state.theme
+                    val overlayScreen = when {
+                        state.showSplash -> "SPLASH"
+                        state.isAboutOpen -> "ABOUT"
+                        state.isThemesOpen -> "THEMES"
+                        state.isSettingsOpen -> "SETTINGS"
+                        else -> "MAIN"
+                    }
+
+                    AnimatedContent(
+                        targetState = overlayScreen,
+                        transitionSpec = {
+                            if (targetState == "MAIN") {
+                                (slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -it / 4 } +
+                                        fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing))) togetherWith
+                                (slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { it } +
+                                        fadeOut(animationSpec = tween(180, easing = FastOutSlowInEasing)))
+                            } else {
+                                (slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { it } +
+                                        fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing))) togetherWith
+                                (slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -it / 4 } +
+                                        fadeOut(animationSpec = tween(180, easing = FastOutSlowInEasing)))
+                            }
+                        },
+                        label = "MainOverlayTransition"
+                    ) { screen ->
+                        when (screen) {
+                            "SPLASH" -> {
+                                SplashScreen(
+                                    theme = state.theme,
+                                    onDismiss = { viewModel.dismissSplash() }
                                 )
                             }
-                        ) { innerPadding ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(innerPadding)
-                            ) {
-                                AnimatedContent(
-                                    targetState = state.currentTab,
-                                    transitionSpec = {
-                                        val forward = targetState.ordinal > initialState.ordinal
-                                        if (forward) {
-                                            (slideInHorizontally(
-                                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                                            ) { width -> (width * 0.25f).toInt() } + fadeIn(
-                                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                                            )) togetherWith (slideOutHorizontally(
-                                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                                            ) { width -> (-width * 0.25f).toInt() } + fadeOut(
-                                                animationSpec = tween(200, easing = FastOutSlowInEasing)
-                                            ))
-                                        } else {
-                                            (slideInHorizontally(
-                                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                                            ) { width -> (-width * 0.25f).toInt() } + fadeIn(
-                                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                                            )) togetherWith (slideOutHorizontally(
-                                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                                            ) { width -> (width * 0.25f).toInt() } + fadeOut(
-                                                animationSpec = tween(200, easing = FastOutSlowInEasing)
-                                            ))
-                                        }
+                            "ABOUT" -> {
+                                AboutScreen(
+                                    theme = state.theme,
+                                    onBack = { viewModel.closeAbout() }
+                                )
+                            }
+                            "THEMES" -> {
+                                ThemeScreen(
+                                    currentTheme = state.theme,
+                                    viewModel = viewModel,
+                                    onBack = { viewModel.closeThemes() }
+                                )
+                            }
+                            "SETTINGS" -> {
+                                SettingsScreen(
+                                    state = state,
+                                    viewModel = viewModel,
+                                    onBack = { viewModel.closeSettings() }
+                                )
+                            }
+                            else -> {
+                                Scaffold(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentWindowInsets = WindowInsets.statusBars,
+                                    containerColor = Color.Transparent,
+                                    contentColor = state.theme.textPrimary,
+                                    snackbarHost = {
+                                        SnackbarHost(
+                                            hostState = snackbarHostState,
+                                            modifier = Modifier.padding(bottom = 80.dp)
+                                        )
                                     },
-                                    label = "TabTransition"
-                                ) { tab ->
-                                    when (tab) {
-                                        AppNavTab.CALCULATOR -> CalculatorScreen(
-                                            state = state,
-                                            viewModel = viewModel
-                                        )
-                                        AppNavTab.CURRENCY -> CurrencyScreen(
-                                            state = state,
-                                            viewModel = viewModel
-                                        )
-                                        AppNavTab.UNITS -> UnitConverterScreen(
-                                            state = state,
-                                            viewModel = viewModel
-                                        )
-                                        AppNavTab.TOOLS -> ToolsScreen(
-                                            state = state,
-                                            viewModel = viewModel
-                                        )
-                                        AppNavTab.HISTORY -> HistoryScreen(
-                                            viewModel = viewModel,
+                                    bottomBar = {
+                                        LiquidGlassNavBar(
+                                            selectedTab = state.currentTab,
+                                            onTabSelected = { viewModel.selectTab(it) },
                                             theme = state.theme
                                         )
+                                    }
+                                ) { innerPadding ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(innerPadding)
+                                    ) {
+                                        AnimatedContent(
+                                            targetState = state.currentTab,
+                                            transitionSpec = {
+                                                val forward = targetState.ordinal > initialState.ordinal
+                                                if (forward) {
+                                                    (slideInHorizontally(
+                                                        animationSpec = tween(280, easing = FastOutSlowInEasing)
+                                                    ) { width -> (width * 0.25f).toInt() } + fadeIn(
+                                                        animationSpec = tween(220, easing = FastOutSlowInEasing)
+                                                    )) togetherWith (slideOutHorizontally(
+                                                        animationSpec = tween(280, easing = FastOutSlowInEasing)
+                                                    ) { width -> (-width * 0.25f).toInt() } + fadeOut(
+                                                        animationSpec = tween(180, easing = FastOutSlowInEasing)
+                                                    ))
+                                                } else {
+                                                    (slideInHorizontally(
+                                                        animationSpec = tween(280, easing = FastOutSlowInEasing)
+                                                    ) { width -> (-width * 0.25f).toInt() } + fadeIn(
+                                                        animationSpec = tween(220, easing = FastOutSlowInEasing)
+                                                    )) togetherWith (slideOutHorizontally(
+                                                        animationSpec = tween(280, easing = FastOutSlowInEasing)
+                                                    ) { width -> (width * 0.25f).toInt() } + fadeOut(
+                                                        animationSpec = tween(180, easing = FastOutSlowInEasing)
+                                                    ))
+                                                }
+                                            },
+                                            label = "TabTransition"
+                                        ) { tab ->
+                                            when (tab) {
+                                                AppNavTab.CALCULATOR -> CalculatorScreen(
+                                                    state = state,
+                                                    viewModel = viewModel
+                                                )
+                                                AppNavTab.CURRENCY -> CurrencyScreen(
+                                                    state = state,
+                                                    viewModel = viewModel
+                                                )
+                                                AppNavTab.UNITS -> UnitConverterScreen(
+                                                    state = state,
+                                                    viewModel = viewModel
+                                                )
+                                                AppNavTab.TOOLS -> ToolsScreen(
+                                                    state = state,
+                                                    viewModel = viewModel
+                                                )
+                                                AppNavTab.HISTORY -> HistoryScreen(
+                                                    viewModel = viewModel,
+                                                    theme = state.theme
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }

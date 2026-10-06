@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,6 +77,10 @@ fun LiquidGlassNavBar(
     val context = LocalContext.current
     val density = LocalDensity.current
     val isLight = theme.isLight
+    val vibrationEnabled = LocalVibrationEnabled.current
+
+    val currentTab by rememberUpdatedState(selectedTab)
+    val currentOnTabSelected by rememberUpdatedState(onTabSelected)
 
     val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     val outerPaddingHorizontal = if (isLandscape) 90.dp else 16.dp
@@ -91,6 +96,7 @@ fun LiquidGlassNavBar(
     // State for tracking swipe/drag interactions dynamically
     var isDragging by remember { mutableStateOf(false) }
     var dragX by remember { mutableFloatStateOf(0f) }
+    var dragTargetTab by remember { mutableStateOf(selectedTab) }
 
     // Precise inner width tracking for perfectly aligned tabs
     val tabWidthPx = if (containerWidth > 0) containerWidth.toFloat() / tabCount else 0f
@@ -151,26 +157,25 @@ fun LiquidGlassNavBar(
                                 isDragging = true
                                 dragX = offset.x
                                 val tabIndex = (offset.x / stepPx).toInt().coerceIn(0, tabCount - 1)
-                                val targetTab = AppNavTab.values()[tabIndex]
-                                if (targetTab != selectedTab) {
-                                    VibrationHelper.tick(context)
-                                    onTabSelected(targetTab)
-                                }
+                                dragTargetTab = AppNavTab.values()[tabIndex]
                             },
                             onDragEnd = {
                                 isDragging = false
+                                if (dragTargetTab != currentTab) {
+                                    if (vibrationEnabled) {
+                                        VibrationHelper.tick(context)
+                                    }
+                                    currentOnTabSelected(dragTargetTab)
+                                }
                             },
                             onDragCancel = {
                                 isDragging = false
+                                dragTargetTab = currentTab
                             },
                             onHorizontalDrag = { change, dragAmount ->
                                 dragX = (dragX + dragAmount).coerceIn(0f, containerWidth.toFloat())
                                 val tabIndex = (dragX / stepPx).toInt().coerceIn(0, tabCount - 1)
-                                val targetTab = AppNavTab.values()[tabIndex]
-                                if (targetTab != selectedTab) {
-                                    VibrationHelper.tick(context)
-                                    onTabSelected(targetTab)
-                                }
+                                dragTargetTab = AppNavTab.values()[tabIndex]
                                 change.consume()
                             }
                         )
@@ -239,9 +244,11 @@ fun LiquidGlassNavBar(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    if (!isSelected) {
-                                        VibrationHelper.tick(context)
-                                        onTabSelected(tab)
+                                    if (tab != currentTab) {
+                                        if (vibrationEnabled) {
+                                            VibrationHelper.tick(context)
+                                        }
+                                        currentOnTabSelected(tab)
                                     }
                                 }
                                 .testTag("nav_tab_${tab.name.lowercase()}")

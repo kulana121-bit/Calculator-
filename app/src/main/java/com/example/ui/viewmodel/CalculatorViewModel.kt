@@ -268,7 +268,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
 
     fun onInput(charOrFunc: String) {
         val currentExp = _uiState.value.expression
-        val operators = setOf("+", "-", "−", "×", "÷", "%", "^", ".")
+        val operators = setOf("+", "-", "−", "×", "÷", "^", ".")
         val isNewOperator = charOrFunc in operators
 
         var baseExp = currentExp
@@ -282,12 +282,18 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
 
+        if (charOrFunc == "%") {
+            if (baseExp.isEmpty()) return
+            val last = baseExp.last()
+            if (last in setOf('+', '-', '−', '×', '÷', '^', '(', '%')) return
+        }
+
         val newExp = when (charOrFunc) {
             "sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "sqrt", "cbrt", "abs" -> {
                 "$baseExp$charOrFunc("
             }
             "1/x" -> {
-                if (baseExp.isEmpty()) "1/(" else "$baseExp*(1/("
+                if (baseExp.isEmpty()) "1/(" else "1/($baseExp)"
             }
             "x²" -> "$baseExp^2"
             "x³" -> "$baseExp^3"

@@ -305,13 +305,31 @@ fun CurrencyScreen(
                         )
                     }
 
-                    Text(
-                        text = formatCurrency.format(state.convertedCurrencyAmount),
-                        color = theme.primaryAccent,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    )
+                    if (state.isCurrencyLoading) {
+                        Box(
+                            modifier = Modifier
+                                .width(96.dp)
+                                .height(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            if (theme.isLight) Color(0xFFE6E5E0) else Color(0x22FFFFFF),
+                                            if (theme.isLight) Color(0xFFF7F6F2) else Color(0x44FFFFFF),
+                                            if (theme.isLight) Color(0xFFE6E5E0) else Color(0x22FFFFFF)
+                                        )
+                                    )
+                                )
+                        )
+                    } else {
+                        Text(
+                            text = formatCurrency.format(state.convertedCurrencyAmount),
+                            color = theme.primaryAccent,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp
+                        )
+                    }
                 }
             }
         }
@@ -347,7 +365,7 @@ fun CurrencyScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Live rates • Updated today",
+                            text = "Live rates • Last updated: ${state.currencyLastUpdated}",
                             color = theme.textSecondary,
                             fontSize = 11.sp
                         )

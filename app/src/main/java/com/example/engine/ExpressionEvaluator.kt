@@ -29,9 +29,10 @@ object ExpressionEvaluator {
 
         try {
             val normalized = normalizeExpression(expression)
-            val tokens = tokenize(normalized)
-            if (tokens.isEmpty()) return EvalResult.Success(0.0, "0")
+            val rawTokens = tokenize(normalized)
+            if (rawTokens.isEmpty()) return EvalResult.Success(0.0, "0")
 
+            val tokens = preprocessPercent(rawTokens)
             val rpn = shuntingYard(tokens)
             val result = evaluateRpn(rpn, angleMode)
 
@@ -76,6 +77,24 @@ object ExpressionEvaluator {
                 while (i < n && (input[i].isDigit() || input[i] == '.')) {
                     sb.append(input[i])
                     i++
+                }
+                // Check for scientific notation exponent: e.g. 1E13, 1.5e-4, 2E+8
+                if (i < n && (input[i] == 'E' || input[i] == 'e')) {
+                    val hasDigitAfterE = i + 1 < n && input[i + 1].isDigit()
+                    val hasSignedDigitAfterE = (i + 1 < n && (input[i + 1] == '+' || input[i + 1] == '-')) &&
+                            (i + 2 < n && input[i + 2].isDigit())
+                    if (hasDigitAfterE || hasSignedDigitAfterE) {
+                        sb.append(input[i]) // E or e
+                        i++
+                        if (i < n && (input[i] == '+' || input[i] == '-')) {
+                            sb.append(input[i])
+                            i++
+                        }
+                        while (i < n && input[i].isDigit()) {
+                            sb.append(input[i])
+                            i++
+                        }
+                    }
                 }
                 // Handle implicit multiplication before number (e.g., )2 or PI 2
                 if (prevToken == ")" || prevToken == "PI" || prevToken == "E" || prevToken == "!") {
@@ -149,6 +168,90 @@ object ExpressionEvaluator {
         return tokens
     }
 
+    private fun preprocessPercent(tokens: List<String>): List<String> {
+        val currentTokens = tokens.toMutableList()
+        var percentIdx = currentTokens.indexOf("%")
+
+        while (percentIdx != -1) {
+            if (percentIdx == 0) {
+                throw IllegalArgumentException("Invalid syntax")
+            }
+
+            // Find the start of operand B preceding %
+            val bEnd = percentIdx
+            val bStart: Int
+            if (currentTokens[percentIdx - 1] == ")") {
+                var depth = 1
+                var j = percentIdx - 2
+                while (j >= 0 && depth > 0) {
+                    if (currentTokens[j] == ")") depth++
+                    else if (currentTokens[j] == "(") depth--
+                    j--
+                }
+                bStart = j + 1
+            } else {
+                bStart = percentIdx - 1
+            }
+
+            val bTokens = currentTokens.subList(bStart, bEnd).toList()
+
+            // Check if there is an operator preceding B
+            val prevOpIdx = bStart - 1
+            if (prevOpIdx >= 0 && (currentTokens[prevOpIdx] == "+" || currentTokens[prevOpIdx] == "-")) {
+                // Preceded by + or - : percentage of the preceding expression A
+                // Find start of A (preceding expression at the same parenthesis level)
+                var depth = 0
+                var j = prevOpIdx - 1
+                while (j >= 0) {
+                    if (currentTokens[j] == ")") depth++
+                    else if (currentTokens[j] == "(") {
+                        if (depth == 0) break
+                        depth--
+                    }
+                    j--
+                }
+                val aStart = j + 1
+                val aTokens = currentTokens.subList(aStart, prevOpIdx).toList()
+
+                // Replace B % with ((A) * (B) / 100)
+                val replacement = mutableListOf<String>()
+                replacement.add("(")
+                replacement.add("(")
+                replacement.addAll(aTokens)
+                replacement.add(")")
+                replacement.add("*")
+                replacement.add("(")
+                replacement.addAll(bTokens)
+                replacement.add(")")
+                replacement.add("/")
+                replacement.add("100")
+                replacement.add(")")
+
+                for (k in bEnd downTo bStart) {
+                    currentTokens.removeAt(k)
+                }
+                currentTokens.addAll(bStart, replacement)
+            } else {
+                // Standalone percentage or after * / : B % -> ((B) / 100)
+                val replacement = mutableListOf<String>()
+                replacement.add("(")
+                replacement.addAll(bTokens)
+                replacement.add("/")
+                replacement.add("100")
+                replacement.add(")")
+
+                for (k in bEnd downTo bStart) {
+                    currentTokens.removeAt(k)
+                }
+                currentTokens.addAll(bStart, replacement)
+            }
+
+            percentIdx = currentTokens.indexOf("%")
+        }
+
+        return currentTokens
+    }
+
     private fun shuntingYard(tokens: List<String>): List<String> {
         val output = mutableListOf<String>()
         val opStack = Stack<String>()
@@ -220,6 +323,10 @@ object ExpressionEvaluator {
                     if (stack.isEmpty()) throw IllegalArgumentException("Invalid syntax")
                     val v = stack.pop()
                     stack.push(factorial(v))
+                }
+                token == "%" -> {
+                    if (stack.isEmpty()) throw IllegalArgumentException("Invalid syntax")
+                    stack.push(stack.pop() / 100.0)
                 }
                 FUNCTIONS.contains(token) -> {
                     if (stack.isEmpty()) throw IllegalArgumentException("Invalid syntax")
@@ -299,10 +406,6 @@ object ExpressionEvaluator {
                 if (abs(b) < 1e-15) throw ArithmeticException("Division by zero")
                 a / b
             }
-            "%" -> {
-                if (abs(b) < 1e-15) throw ArithmeticException("Modulo by zero")
-                a % b
-            }
             "^" -> a.pow(b)
             else -> throw IllegalArgumentException("Unknown operator $op")
         }
@@ -345,14 +448,14 @@ object ExpressionEvaluator {
     }
 
     private fun isOperator(token: String): Boolean {
-        return token == "+" || token == "-" || token == "*" || token == "/" || token == "%" || token == "^"
+        return token == "+" || token == "-" || token == "*" || token == "/" || token == "^"
     }
 
     private fun precedence(op: String): Int {
         return when (op) {
-            "u-" -> 5
-            "^" -> 4
-            "*", "/", "%" -> 3
+            "^" -> 5
+            "u-" -> 4
+            "*", "/" -> 3
             "+", "-" -> 2
             else -> 0
         }

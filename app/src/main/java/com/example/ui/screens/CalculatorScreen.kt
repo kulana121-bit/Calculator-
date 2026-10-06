@@ -2,8 +2,10 @@ package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -29,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -47,6 +50,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -366,11 +370,32 @@ private fun CalculatorDisplay(
     modifier: Modifier = Modifier
 ) {
     var dragAccumulator by remember { mutableFloatStateOf(0f) }
+    val shakeOffset = remember { Animatable(0f) }
+
+    LaunchedEffect(state.isError, state.errorMessage) {
+        if (state.isError) {
+            shakeOffset.snapTo(0f)
+            shakeOffset.animateTo(
+                targetValue = 0f,
+                animationSpec = keyframes {
+                    durationMillis = 350
+                    0f at 0
+                    (-8f) at 50
+                    8f at 100
+                    (-6f) at 160
+                    6f at 220
+                    (-3f) at 280
+                    0f at 350
+                }
+            )
+        }
+    }
 
     LiquidGlassCard(
         theme = theme,
         modifier = modifier
             .fillMaxWidth()
+            .offset(x = shakeOffset.value.dp)
             .padding(vertical = 4.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -488,6 +513,13 @@ private fun CalculatorDisplay(
             Spacer(modifier = Modifier.height(6.dp))
 
             // Small calculation expression: e.g. 2,500 × 4 + 320
+            val expFontSize = when {
+                state.expression.length > 30 -> 13.sp
+                state.expression.length > 20 -> 15.sp
+                state.expression.length > 14 -> 17.sp
+                else -> 20.sp
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -498,9 +530,9 @@ private fun CalculatorDisplay(
                 Text(
                     text = if (state.expression.isEmpty()) "0" else state.expression,
                     color = if (state.isError) Color(0xFFFF5252) else theme.textSecondary,
-                    fontSize = 20.sp,
+                    fontSize = expFontSize,
                     fontWeight = FontWeight.Normal,
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = FontFamily.Monospace,
                     textAlign = TextAlign.End,
                     maxLines = 1,
                     modifier = Modifier.testTag("calc_expression_text")
@@ -523,9 +555,10 @@ private fun CalculatorDisplay(
                 }
 
                 val resultFontSize = when {
-                    displayResult.length > 14 -> 28.sp
-                    displayResult.length > 10 -> 34.sp
-                    displayResult.length > 7 -> 40.sp
+                    displayResult.length > 18 -> 20.sp
+                    displayResult.length > 14 -> 26.sp
+                    displayResult.length > 10 -> 32.sp
+                    displayResult.length > 7 -> 38.sp
                     else -> 46.sp
                 }
 
@@ -546,7 +579,7 @@ private fun CalculatorDisplay(
                         color = if (state.isError) Color(0xFFFF5252) else theme.textPrimary,
                         fontSize = resultFontSize,
                         fontWeight = FontWeight.Light,
-                        fontFamily = FontFamily.SansSerif,
+                        fontFamily = FontFamily.Monospace,
                         textAlign = TextAlign.End,
                         maxLines = 1,
                         letterSpacing = (-0.5).sp,

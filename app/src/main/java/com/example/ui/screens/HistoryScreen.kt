@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.CalculationEntity
+import com.example.ui.components.AppNavTab
 import com.example.ui.components.LiquidGlassCard
 import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.CalculatorViewModel
@@ -240,20 +241,59 @@ fun HistoryScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = null,
-                        tint = theme.textSecondary.copy(alpha = 0.35f),
-                        modifier = Modifier.size(56.dp)
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(CircleShape)
+                            .background(if (theme.isLight) Color(0xFFF0EFEA) else Color(0x1FFFFFFF)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "History",
+                            tint = theme.primaryAccent,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = if (searchQuery.isNotEmpty() || filterFavoritesOnly) "No calculations match" else "No history yet",
-                        color = theme.textSecondary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
+                        text = if (searchQuery.isNotEmpty() || filterFavoritesOnly) "No Matching Calculations" else "No Calculations Yet",
+                        color = theme.textPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = if (searchQuery.isNotEmpty() || filterFavoritesOnly)
+                            "Try clearing your search query or removing the favorites filter."
+                        else "Perform calculations in the calculator and your results will be saved here automatically.",
+                        color = theme.textSecondary,
+                        fontSize = 13.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(theme.primaryAccent)
+                            .clickable {
+                                viewModel.selectTab(AppNavTab.CALCULATOR)
+                            }
+                            .padding(horizontal = 24.dp, vertical = 12.dp)
+                            .testTag("history_cta_calculator_btn")
+                    ) {
+                        Text(
+                            text = "Back to Calculator",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         } else {
