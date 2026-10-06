@@ -368,7 +368,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     RETRO_NEO(
@@ -386,7 +386,7 @@ enum class ThemeMode(
         buttonFuncColor = Color(0xFFF4F3F0),
         buttonActionColor = Color(0xFFFF7A00),
         textPrimary = Color(0xFF1C1C1E),
-        textSecondary = Color(0xFF8E8E93),
+        textSecondary = Color(0xFF5A5A62),
         isLight = true
     ),
     VIOLET_INDIGO(

@@ -1,0 +1,81 @@
+<resources>
+    <string name="app_name">कैलकुलेटर</string>
+
+    <!-- Nav Tabs -->
+    <string name="tab_calc">कैलकुलेटर</string>
+    <string name="tab_currency">मुद्रा</string>
+    <string name="tab_units">इकाइयाँ</string>
+    <string name="tab_tools">टूल्स</string>
+    <string name="tab_history">इतिहास</string>
+
+    <!-- Settings -->
+    <string name="settings_title">सेटिंग्स</string>
+    <string name="settings_themes">थीम और रंग</string>
+    <string name="settings_haptic">हैप्टिक फीडबैक</string>
+    <string name="settings_sound">ध्वनि</string>
+    <string name="settings_language">भाषा</string>
+    <string name="settings_rate_app">ऐप को रेट करें</string>
+    <string name="settings_share_app">ऐप शेयर करें</string>
+    <string name="settings_about">के बारे में</string>
+    <string name="rate_dialog_title">क्या आपको Calculator पसंद आ रहा है?</string>
+    <string name="rate_dialog_desc">Calculator का उपयोग करने के लिए धन्यवाद! हम बेहतरीन गणना अनुभव प्रदान करने का प्रयास करते हैं।</string>
+    <string name="rate_5_stars">5 स्टार रेटिंग दें ⭐</string>
+    <string name="maybe_later">बाद में</string>
+    <string name="select_language">भाषा चुनें</string>
+    <string name="close">बंद करें</string>
+    <string name="share_app_text">चेक करें Calculator - मुद्रा और इकाई परिवर्तक के साथ एक प्रीमियम कैलकुलेटर ऐप!</string>
+    <string name="share_chooser_title">Calculator शेयर करें</string>
+
+    <!-- Calculator Display & Keypad -->
+    <string name="mode_standard">मानक</string>
+    <string name="mode_scientific">वैज्ञानिक</string>
+    <string name="swipe_to_backspace">हटाने के लिए स्वाइप करें</string>
+    <string name="copied">कॉपी किया गया!</string>
+    <string name="error_text">त्रुटि</string>
+    <string name="calc_memory_cleared">मेमोरी साफ़ की गई</string>
+
+    <!-- History -->
+    <string name="history_title">इतिहास</string>
+    <string name="history_calculations_count">गणनाएँ</string>
+    <string name="history_search_placeholder">गणनाएँ खोजें…</string>
+    <string name="history_empty_title">अभी कोई इतिहास नहीं है</string>
+    <string name="history_empty_match_title">कोई मिलती-जुलती गणना नहीं</string>
+    <string name="history_empty_desc">कैलकुलेटर में गणना करें और आपके परिणाम यहाँ अपने आप सहेजे जाएँगे।</string>
+    <string name="history_empty_match_desc">अपनी खोज साफ़ करें या पसंदीदा फ़िल्टर हटाएं।</string>
+    <string name="history_back_to_calc">कैलकुलेटर पर वापस जाएँ</string>
+    <string name="history_clear_all">सारा इतिहास साफ़ करें</string>
+    <string name="history_clear_confirm">क्या आप वाकई गणना इतिहास साफ़ करना चाहते हैं?</string>
+    <string name="history_clear_btn">साफ़ करें</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="history_copy_expression">समीकरण कॉपी करें</string>
+    <string name="history_copy_result">परिणाम कॉपी करें</string>
+    <string name="history_reuse">पुनः उपयोग</string>
+    <string name="history_delete">हटाएं</string>
+
+    <!-- Currency -->
+    <string name="currency_title">मुद्रा</string>
+    <string name="currency_live_rates">लाइव दरें</string>
+    <string name="currency_search_placeholder">मुद्रा या देश खोजें…</string>
+    <string name="select_currency">मुद्रा चुनें</string>
+
+    <!-- Units -->
+    <string name="units_title">इकाई परिवर्तक</string>
+    <string name="unit_from">से</string>
+    <string name="unit_to">तक</string>
+
+    <!-- Tools -->
+    <string name="tools_title">टूल्स</string>
+    <string name="tool_tip">टिप कैलकुलेटर</string>
+    <string name="tool_percentage">प्रतिशत</string>
+    <string name="tool_gst">जीएसटी कैलकुलेटर</string>
+    <string name="tool_loan_emi">लोन ईएमआई</string>
+    <string name="tool_age">आयु कैलकुलेटर</string>
+    <string name="tool_date">तारीख कैलकुलेटर</string>
+    <string name="tool_discount">छूट</string>
+    <string name="tool_bmi">बीएमआई कैलकुलेटर</string>
+
+    <!-- About -->
+    <string name="about_title">Calculator के बारे में</string>
+    <string name="about_tagline">सटीकता और सुंदरता</string>
+    <string name="about_description">लिक्विड ग्लासमॉर्फिज़्म, सहज स्प्रिंग एनिमेशन और हैप्टिक फ़ीडबैक के साथ डिज़ाइन किया गया।</string>
+</resources>

@@ -134,7 +134,6 @@ data class CalculatorUiState(
     // Settings
     val hapticFeedbackEnabled: Boolean = true,
     val soundEnabled: Boolean = false,
-    val vibrationEnabled: Boolean = true,
     val currentLanguage: String = "English",
     val showSplash: Boolean = true,
     val isSettingsOpen: Boolean = false,
@@ -211,6 +210,10 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         val savedMemoryVal = prefs.getFloat("pref_memory_value", 0f).toDouble()
         val savedHasMemory = prefs.getBoolean("pref_has_memory", false)
 
+        val savedHaptic = prefs.getBoolean("pref_haptic_feedback", true)
+        val savedSound = prefs.getBoolean("pref_sound", false)
+        val savedLanguage = prefs.getString("pref_language", "English") ?: "English"
+
         _uiState.update {
             it.copy(
                 theme = loadedTheme,
@@ -219,7 +222,10 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
                 toCurrency = savedToCurr,
                 currencyAmount = savedCurrAmount,
                 memoryValue = savedMemoryVal,
-                hasMemory = savedHasMemory
+                hasMemory = savedHasMemory,
+                hapticFeedbackEnabled = savedHaptic,
+                soundEnabled = savedSound,
+                currentLanguage = savedLanguage
             )
         }
 
@@ -965,18 +971,19 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     // Settings & Modal Screen Handlers
     // ----------------------------------------------------
     fun toggleHapticFeedback() {
-        _uiState.update { it.copy(hapticFeedbackEnabled = !it.hapticFeedbackEnabled) }
+        val newHaptic = !_uiState.value.hapticFeedbackEnabled
+        prefs.edit().putBoolean("pref_haptic_feedback", newHaptic).apply()
+        _uiState.update { it.copy(hapticFeedbackEnabled = newHaptic) }
     }
 
     fun toggleSound() {
-        _uiState.update { it.copy(soundEnabled = !it.soundEnabled) }
-    }
-
-    fun toggleVibration() {
-        _uiState.update { it.copy(vibrationEnabled = !it.vibrationEnabled) }
+        val newSound = !_uiState.value.soundEnabled
+        prefs.edit().putBoolean("pref_sound", newSound).apply()
+        _uiState.update { it.copy(soundEnabled = newSound) }
     }
 
     fun setLanguage(lang: String) {
+        prefs.edit().putString("pref_language", lang).apply()
         _uiState.update { it.copy(currentLanguage = lang) }
     }
 

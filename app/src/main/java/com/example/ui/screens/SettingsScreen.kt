@@ -1,6 +1,9 @@
 package com.example.ui.screens
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,7 +33,6 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -52,9 +54,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.ui.components.LiquidGlassCard
 import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.CalculatorUiState
@@ -100,7 +104,7 @@ fun SettingsScreen(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.close),
                     tint = theme.textPrimary
                 )
             }
@@ -108,7 +112,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.width(12.dp))
 
             Text(
-                text = "Settings",
+                text = stringResource(R.string.settings_title),
                 color = theme.textPrimary,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
@@ -124,7 +128,7 @@ fun SettingsScreen(
             SettingsNavigationRow(
                 icon = Icons.Default.Palette,
                 iconColor = Color(0xFFF97316),
-                title = "Themes & Colors",
+                title = stringResource(R.string.settings_themes),
                 subtitle = state.theme.title,
                 theme = theme,
                 onClick = { viewModel.openThemes() },
@@ -144,7 +148,7 @@ fun SettingsScreen(
                 SettingsToggleRow(
                     icon = Icons.Default.TouchApp,
                     iconColor = Color(0xFF10B981),
-                    title = "Haptic Feedback",
+                    title = stringResource(R.string.settings_haptic),
                     checked = state.hapticFeedbackEnabled,
                     onCheckedChange = { viewModel.toggleHapticFeedback() },
                     theme = theme,
@@ -156,23 +160,11 @@ fun SettingsScreen(
                 SettingsToggleRow(
                     icon = Icons.Default.VolumeUp,
                     iconColor = Color(0xFF3B82F6),
-                    title = "Sound",
+                    title = stringResource(R.string.settings_sound),
                     checked = state.soundEnabled,
                     onCheckedChange = { viewModel.toggleSound() },
                     theme = theme,
                     testTag = "settings_sound"
-                )
-
-                SettingsDivider(theme)
-
-                SettingsToggleRow(
-                    icon = Icons.Default.Vibration,
-                    iconColor = Color(0xFF8B5CF6),
-                    title = "Vibration",
-                    checked = state.vibrationEnabled,
-                    onCheckedChange = { viewModel.toggleVibration() },
-                    theme = theme,
-                    testTag = "settings_vibration"
                 )
             }
         }
@@ -188,7 +180,7 @@ fun SettingsScreen(
             SettingsNavigationRow(
                 icon = Icons.Default.Language,
                 iconColor = Color(0xFF6366F1),
-                title = "Language",
+                title = stringResource(R.string.settings_language),
                 subtitle = state.currentLanguage,
                 theme = theme,
                 onClick = { showLanguageDialog = true },
@@ -208,7 +200,7 @@ fun SettingsScreen(
                 SettingsNavigationRow(
                     icon = Icons.Default.StarRate,
                     iconColor = Color(0xFFF59E0B),
-                    title = "Rate App",
+                    title = stringResource(R.string.settings_rate_app),
                     subtitle = null,
                     theme = theme,
                     onClick = { showRateDialog = true },
@@ -220,7 +212,7 @@ fun SettingsScreen(
                 SettingsNavigationRow(
                     icon = Icons.Default.Share,
                     iconColor = Color(0xFF06B6D4),
-                    title = "Share App",
+                    title = stringResource(R.string.settings_share_app),
                     subtitle = null,
                     theme = theme,
                     onClick = {
@@ -228,10 +220,10 @@ fun SettingsScreen(
                             type = "text/plain"
                             putExtra(
                                 Intent.EXTRA_TEXT,
-                                "Check out Calculator - a clean, premium calculator app with unit & currency converter and interactive home screen widget!"
+                                context.getString(R.string.share_app_text)
                             )
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, "Share Calculator"))
+                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_chooser_title)))
                     },
                     testTag = "settings_share"
                 )
@@ -241,7 +233,7 @@ fun SettingsScreen(
                 SettingsNavigationRow(
                     icon = Icons.Default.Info,
                     iconColor = Color(0xFF8B5CF6),
-                    title = "About",
+                    title = stringResource(R.string.settings_about),
                     subtitle = "v1.0.0",
                     theme = theme,
                     onClick = { viewModel.openAbout() },
@@ -252,21 +244,33 @@ fun SettingsScreen(
     }
 
     // ----------------------------------------------------
-    // Widget Sticky Notes Selector Dialog
+    // Rate App Dialog
     // ----------------------------------------------------
     if (showRateDialog) {
         AlertDialog(
             onDismissRequest = { showRateDialog = false },
-            title = { Text("Enjoying Calculator?", fontWeight = FontWeight.Bold) },
-            text = { Text("Thank you for using Calculator! We strive to deliver an Apple-grade calculation experience.") },
+            title = { Text(stringResource(R.string.rate_dialog_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.rate_dialog_desc)) },
             confirmButton = {
-                TextButton(onClick = { showRateDialog = false }) {
-                    Text("Rate 5 Stars ⭐", color = theme.primaryAccent, fontWeight = FontWeight.Bold)
+                TextButton(onClick = {
+                    showRateDialog = false
+                    val packageName = context.packageName
+                    val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                    }
+                    try {
+                        context.startActivity(marketIntent)
+                    } catch (e: ActivityNotFoundException) {
+                        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
+                        context.startActivity(webIntent)
+                    }
+                }) {
+                    Text(stringResource(R.string.rate_5_stars), color = theme.primaryAccent, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRateDialog = false }) {
-                    Text("Maybe Later", color = theme.textSecondary)
+                    Text(stringResource(R.string.maybe_later), color = theme.textSecondary)
                 }
             },
             containerColor = if (theme.isLight) Color.White else Color(0xFF242428),
@@ -278,7 +282,7 @@ fun SettingsScreen(
         val languages = listOf("English", "Spanish", "French", "German", "Japanese", "Hindi")
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            title = { Text("Select Language", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.select_language), fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     languages.forEach { lang ->
@@ -288,7 +292,9 @@ fun SettingsScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
                                     viewModel.setLanguage(lang)
+                                    com.example.MainActivity.setAppLocale(context, lang)
                                     showLanguageDialog = false
+                                    (context as? Activity)?.recreate()
                                 }
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -304,7 +310,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("Close", color = theme.primaryAccent)
+                    Text(stringResource(R.string.close), color = theme.primaryAccent)
                 }
             },
             containerColor = if (theme.isLight) Color.White else Color(0xFF242428),

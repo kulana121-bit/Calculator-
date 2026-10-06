@@ -1,6 +1,11 @@
 package com.example
 
+import android.app.LocaleManager
+import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.os.LocaleList
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -53,9 +58,39 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: CalculatorViewModel by viewModels()
 
+    companion object {
+        fun setAppLocale(context: Context, lang: String) {
+            val langCode = when (lang) {
+                "Spanish" -> "es"
+                "French" -> "fr"
+                "German" -> "de"
+                "Japanese" -> "ja"
+                "Hindi" -> "hi"
+                else -> "en"
+            }
+            val locale = java.util.Locale(langCode)
+            java.util.Locale.setDefault(locale)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val localeManager = context.getSystemService(LocaleManager::class.java)
+                localeManager?.applicationLocales = LocaleList(locale)
+            }
+
+            val resources = context.resources
+            val config = Configuration(resources.configuration)
+            config.setLocale(locale)
+            resources.updateConfiguration(config, resources.displayMetrics)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Restore language setting on app startup
+        val prefs = getSharedPreferences("smart_calculator_prefs", MODE_PRIVATE)
+        val savedLang = prefs.getString("pref_language", "English") ?: "English"
+        setAppLocale(this, savedLang)
 
         setContent {
             val state by viewModel.uiState.collectAsState()

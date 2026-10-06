@@ -1,0 +1,81 @@
+<resources>
+    <string name="app_name">Calculadora</string>
+
+    <!-- Nav Tabs -->
+    <string name="tab_calc">Calc</string>
+    <string name="tab_currency">Divisas</string>
+    <string name="tab_units">Unidades</string>
+    <string name="tab_tools">Herramientas</string>
+    <string name="tab_history">Historial</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_themes">Temas y colores</string>
+    <string name="settings_haptic">Respuesta háptica</string>
+    <string name="settings_sound">Sonido</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_rate_app">Calificar app</string>
+    <string name="settings_share_app">Compartir app</string>
+    <string name="settings_about">Acerca de</string>
+    <string name="rate_dialog_title">¿Disfrutas de Calculator?</string>
+    <string name="rate_dialog_desc">¡Gracias por usar Calculator! Nos esforzamos por ofrecer una experiencia de cálculo de primer nivel.</string>
+    <string name="rate_5_stars">Calificar 5 estrellas ⭐</string>
+    <string name="maybe_later">Más tarde</string>
+    <string name="select_language">Seleccionar idioma</string>
+    <string name="close">Cerrar</string>
+    <string name="share_app_text">¡Descubre Calculator: una aplicación de calculadora premium con conversor de divisas y unidades!</string>
+    <string name="share_chooser_title">Compartir Calculadora</string>
+
+    <!-- Calculator Display & Keypad -->
+    <string name="mode_standard">Estándar</string>
+    <string name="mode_scientific">Científica</string>
+    <string name="swipe_to_backspace">Deslizar para borrar</string>
+    <string name="copied">¡Copiado!</string>
+    <string name="error_text">Error</string>
+    <string name="calc_memory_cleared">Memoria borrada</string>
+
+    <!-- History -->
+    <string name="history_title">Historial</string>
+    <string name="history_calculations_count">cálculos</string>
+    <string name="history_search_placeholder">Buscar cálculos…</string>
+    <string name="history_empty_title">Aún no hay cálculos</string>
+    <string name="history_empty_match_title">No hay cálculos coincidentes</string>
+    <string name="history_empty_desc">Realiza cálculos en la calculadora y tus resultados se guardarán aquí automáticamente.</string>
+    <string name="history_empty_match_desc">Intenta borrar tu búsqueda o quitar el filtro de favoritos.</string>
+    <string name="history_back_to_calc">Volver a la calculadora</string>
+    <string name="history_clear_all">Borrar todo el historial</string>
+    <string name="history_clear_confirm">¿Estás seguro de que deseas borrar tu historial de cálculos?</string>
+    <string name="history_clear_btn">Borrar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="history_copy_expression">Copiar expresión</string>
+    <string name="history_copy_result">Copiar resultado</string>
+    <string name="history_reuse">Reutilizar</string>
+    <string name="history_delete">Eliminar</string>
+
+    <!-- Currency -->
+    <string name="currency_title">Divisas</string>
+    <string name="currency_live_rates">Tipos en vivo</string>
+    <string name="currency_search_placeholder">Buscar divisa o país…</string>
+    <string name="select_currency">Seleccionar divisa</string>
+
+    <!-- Units -->
+    <string name="units_title">Convertidor de unidades</string>
+    <string name="unit_from">De</string>
+    <string name="unit_to">A</string>
+
+    <!-- Tools -->
+    <string name="tools_title">Herramientas</string>
+    <string name="tool_tip">Calculadora de propinas</string>
+    <string name="tool_percentage">Porcentaje</string>
+    <string name="tool_gst">Calculadora de IVA</string>
+    <string name="tool_loan_emi">Cuota de préstamo</string>
+    <string name="tool_age">Calculadora de edad</string>
+    <string name="tool_date">Calculadora de fechas</string>
+    <string name="tool_discount">Descuento</string>
+    <string name="tool_bmi">Calculadora de IMC</string>
+
+    <!-- About -->
+    <string name="about_title">Acerca de Calculator</string>
+    <string name="about_tagline">Precisión y elegancia</string>
+    <string name="about_description">Diseñado con glassmorphism líquido, interacciones de resorte físicas y respuesta háptica.</string>
+</resources>
