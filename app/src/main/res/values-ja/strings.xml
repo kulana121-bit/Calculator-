@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">計算機</string>
+    <string name="app_name">Calculator</string>
 
     <!-- Nav Tabs -->
     <string name="tab_calc">計算機</string>
@@ -10,47 +10,53 @@
 
     <!-- Settings -->
     <string name="settings_title">設定</string>
-    <string name="settings_themes">テーマと色</string>
+    <string name="settings_themes">テーマとカラー</string>
     <string name="settings_haptic">触覚フィードバック</string>
     <string name="settings_sound">サウンド</string>
     <string name="settings_language">言語</string>
     <string name="settings_rate_app">アプリを評価</string>
     <string name="settings_share_app">アプリを共有</string>
-    <string name="settings_about">アプリ情報</string>
-    <string name="rate_dialog_title">Calculatorを気に入っていただけましたか？</string>
-    <string name="rate_dialog_desc">Calculatorをご利用いただきありがとうございます。最高品質の計算体験をお届けします。</string>
+    <string name="settings_about">情報</string>
+    <string name="rate_dialog_title">Calculator を気に入っていただけましたか？</string>
+    <string name="rate_dialog_desc">ご利用ありがとうございます！最高品質の計算体験をお届けします。</string>
     <string name="rate_5_stars">星5つで評価 ⭐</string>
     <string name="maybe_later">後で</string>
     <string name="select_language">言語を選択</string>
     <string name="close">閉じる</string>
-    <string name="share_app_text">洗練されたデザインと通貨・単位変換機能を備えたCalculatorアプリをチェックしてみてください！</string>
-    <string name="share_chooser_title">Calculatorを共有</string>
+    <string name="share_app_text">Calculator をチェック！単位・通貨換算とウィジェットを備えた美しい計算機アプリです！</string>
+    <string name="share_chooser_title">Calculator を共有</string>
 
     <!-- Calculator Display & Keypad -->
     <string name="mode_standard">標準</string>
-    <string name="mode_scientific">関数電卓</string>
-    <string name="swipe_to_backspace">スワイプで削除</string>
+    <string name="mode_scientific">関数</string>
+    <string name="mode_programmer">プログラマー</string>
+    <string name="swipe_to_backspace">スワイプで1文字削除</string>
     <string name="copied">コピーしました！</string>
     <string name="error_text">エラー</string>
-    <string name="calc_memory_cleared">メモリを消去しました</string>
+    <string name="calc_memory_cleared">メモリをクリアしました</string>
 
     <!-- History -->
     <string name="history_title">履歴</string>
     <string name="history_calculations_count">件の計算</string>
-    <string name="history_search_placeholder">計算を検索…</string>
-    <string name="history_empty_title">計算履歴がありません</string>
-    <string name="history_empty_match_title">一致する計算がありません</string>
-    <string name="history_empty_desc">電卓で計算を行うと、結果がここに自動保存されます。</string>
-    <string name="history_empty_match_desc">検索キーワードをクリアするか、お気に入りフィルターを解除してください。</string>
-    <string name="history_back_to_calc">電卓に戻る</string>
+    <string name="history_search_placeholder">計算履歴を検索…</string>
+    <string name="history_empty_title">計算履歴はまだありません</string>
+    <string name="history_empty_match_title">一致する計算履歴がありません</string>
+    <string name="history_empty_desc">計算を行うと自動的にここに保存されます。</string>
+    <string name="history_empty_match_desc">検索条件をクリアするか、お気に入りフィルターを解除してください。</string>
+    <string name="history_back_to_calc">計算機に戻る</string>
     <string name="history_clear_all">すべての履歴を消去</string>
-    <string name="history_clear_confirm">計算履歴をすべて消去してもよろしいですか？</string>
+    <string name="history_clear_confirm">計算履歴をすべて消去しますか？</string>
     <string name="history_clear_btn">消去</string>
     <string name="cancel">キャンセル</string>
     <string name="history_copy_expression">式をコピー</string>
     <string name="history_copy_result">結果をコピー</string>
     <string name="history_reuse">再利用</string>
     <string name="history_delete">削除</string>
+    <string name="history_export_title">履歴をエクスポート</string>
+    <string name="history_export_text">テキストとして書き出し</string>
+    <string name="history_export_csv">CSVとして書き出し</string>
+    <string name="history_empty_export">エクスポートする履歴がありません</string>
+    <string name="share_history">履歴を共有</string>
 
     <!-- Currency -->
     <string name="currency_title">通貨</string>
@@ -59,30 +65,37 @@
     <string name="select_currency">通貨を選択</string>
 
     <!-- Units -->
-    <string name="units_title">単位変換</string>
+    <string name="units_title">単位換算</string>
     <string name="unit_from">変換元</string>
     <string name="unit_to">変換先</string>
 
     <!-- Tools -->
     <string name="tools_title">ツール</string>
-    <string name="tool_tip">チップ計算機</string>
-    <string name="tool_percentage">パーセント</string>
-    <string name="tool_gst">消費税計算機</string>
-    <string name="tool_loan_emi">ローン計算機</string>
-    <string name="tool_age">年齢計算機</string>
-    <string name="tool_date">日付計算機</string>
-    <string name="tool_discount">割引計算機</string>
-    <string name="tool_bmi">BMI計算機</string>
+    <string name="tool_tip">チップ計算</string>
+    <string name="tool_percentage">割合・パーセント</string>
+    <string name="tool_gst">消費税計算</string>
+    <string name="tool_loan_emi">ローン返済額</string>
+    <string name="tool_age">年齢計算</string>
+    <string name="tool_date">日付計算</string>
+    <string name="tool_discount">割引計算</string>
+    <string name="tool_bmi">BMI計算</string>
 
     <!-- About -->
     <string name="about_title">Calculatorについて</string>
     <string name="about_tagline">正確さと優雅さ</string>
     <string name="about_description">リキッドグラスモーフィズム、物理スプリングアニメーション、触覚フィードバックで設計されています。</string>
 
-    <!-- Round 5 Features -->
-    <string name="camera_permission_denied">数式をスキャンするにはカメラの許可が必要です。</string>
-    <string name="no_math_recognized">画像から数式が認識されませんでした。</string>
-    <string name="scan_math_tooltip">カメラで数式をスキャン</string>
-    <string name="mode_programmer">プログラマー</string>
+    <!-- Round 6 Features & Themes -->
+    <string name="voice_input_tooltip">音声入力</string>
+    <string name="voice_offline_unavailable">オフライン音声パックが未インストールです</string>
+    <string name="voice_listening">数式を聞き取り中…</string>
+    <string name="voice_permission_required">音声入力にはマイクの権限が必要です</string>
+    <string name="theme_light">ライト</string>
+    <string name="theme_dark">ダーク</string>
+    <string name="theme_amoled">AMOLED ブラック</string>
+    <string name="theme_dynamic">ダイナミックカラー</string>
+    <string name="theme_cyber_neon">サイバーネオン</string>
+    <string name="theme_nordic">ノルディック</string>
+    <string name="theme_midnight">ミッドナイトライト</string>
     <string name="widget_description">ホーム画面の高速で洗練された計算機</string>
 </resources>

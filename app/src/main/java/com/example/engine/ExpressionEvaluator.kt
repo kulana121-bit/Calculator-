@@ -515,4 +515,45 @@ object ExpressionEvaluator {
 
         return plain
     }
+
+    /**
+     * Formats a numeric result string or live evaluation with locale-aware thousands grouping
+     * for visual presentation only without modifying original calculation numbers.
+     */
+    fun formatForDisplay(rawResult: String, locale: Locale = Locale.getDefault()): String {
+        if (rawResult.isBlank() || rawResult == "Error") return rawResult
+        // Check for scientific notation like 1.23E8
+        if (rawResult.contains("E", ignoreCase = true)) return rawResult
+
+        // Check if rawResult is a valid signed number
+        val isNegative = rawResult.startsWith("-") || rawResult.startsWith("−")
+        val cleanNumber = if (isNegative) rawResult.substring(1) else rawResult
+
+        val parts = cleanNumber.split(".")
+        if (parts.isEmpty()) return rawResult
+
+        val integerPart = parts[0]
+        if (!integerPart.all { it.isDigit() }) return rawResult
+
+        val symbols = DecimalFormatSymbols.getInstance(locale)
+        val groupingSeparator = symbols.groupingSeparator
+        val decimalSeparator = symbols.decimalSeparator
+
+        val groupedInteger = StringBuilder()
+        val len = integerPart.length
+        for (i in 0 until len) {
+            groupedInteger.append(integerPart[i])
+            val remaining = len - 1 - i
+            if (remaining > 0 && remaining % 3 == 0) {
+                groupedInteger.append(groupingSeparator)
+            }
+        }
+
+        val sign = if (isNegative) "−" else ""
+        return if (parts.size > 1) {
+            "$sign$groupedInteger$decimalSeparator${parts[1]}"
+        } else {
+            "$sign$groupedInteger"
+        }
+    }
 }

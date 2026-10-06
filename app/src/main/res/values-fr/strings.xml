@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">Calculatrice</string>
+    <string name="app_name">Calculator</string>
 
     <!-- Nav Tabs -->
-    <string name="tab_calc">Calc</string>
+    <string name="tab_calc">Calcul</string>
     <string name="tab_currency">Devises</string>
     <string name="tab_units">Unités</string>
     <string name="tab_tools">Outils</string>
@@ -17,18 +17,19 @@
     <string name="settings_rate_app">Noter l\'application</string>
     <string name="settings_share_app">Partager l\'application</string>
     <string name="settings_about">À propos</string>
-    <string name="rate_dialog_title">Vous appréciez Calculator ?</string>
-    <string name="rate_dialog_desc">Merci d\'utiliser Calculator ! Nous nous efforçons d\'offrir une expérience de calcul de premier ordre.</string>
+    <string name="rate_dialog_title">Vous aimez Calculator ?</string>
+    <string name="rate_dialog_desc">Merci d\'utiliser Calculator ! Nous nous efforçons d\'offrir une expérience de calcul élégante.</string>
     <string name="rate_5_stars">Noter 5 étoiles ⭐</string>
     <string name="maybe_later">Plus tard</string>
-    <string name="select_language">Choisir la langue</string>
+    <string name="select_language">Sélectionner la langue</string>
     <string name="close">Fermer</string>
-    <string name="share_app_text">Découvrez Calculator : une calculatrice élégante avec convertisseur de devises et d\'unités !</string>
+    <string name="share_app_text">Découvrez Calculator : une application épurée avec convertisseur d\'unités et devises et widget interactif !</string>
     <string name="share_chooser_title">Partager Calculator</string>
 
     <!-- Calculator Display & Keypad -->
     <string name="mode_standard">Standard</string>
     <string name="mode_scientific">Scientifique</string>
+    <string name="mode_programmer">Programmeur</string>
     <string name="swipe_to_backspace">Glisser pour effacer</string>
     <string name="copied">Copié !</string>
     <string name="error_text">Erreur</string>
@@ -40,22 +41,27 @@
     <string name="history_search_placeholder">Rechercher des calculs…</string>
     <string name="history_empty_title">Aucun calcul pour l\'instant</string>
     <string name="history_empty_match_title">Aucun calcul correspondant</string>
-    <string name="history_empty_desc">Effectuez des calculs dans la calculatrice et vos résultats seront enregistrés ici automatiquement.</string>
-    <string name="history_empty_match_desc">Essayez d\'effacer votre recherche ou de retirer le filtre des favoris.</string>
+    <string name="history_empty_desc">Effectuez des calculs et vos résultats seront enregistrés automatiquement ici.</string>
+    <string name="history_empty_match_desc">Essayez d\'effacer votre recherche ou de désactiver le filtre favoris.</string>
     <string name="history_back_to_calc">Retour à la calculatrice</string>
     <string name="history_clear_all">Effacer tout l\'historique</string>
-    <string name="history_clear_confirm">Êtes-vous sûr de vouloir effacer l\'historique des calculs ?</string>
+    <string name="history_clear_confirm">Voulez-vous vraiment effacer votre historique de calcul ?</string>
     <string name="history_clear_btn">Effacer</string>
     <string name="cancel">Annuler</string>
     <string name="history_copy_expression">Copier l\'expression</string>
     <string name="history_copy_result">Copier le résultat</string>
     <string name="history_reuse">Réutiliser</string>
     <string name="history_delete">Supprimer</string>
+    <string name="history_export_title">Exporter l\'historique</string>
+    <string name="history_export_text">Exporter en texte</string>
+    <string name="history_export_csv">Exporter en CSV</string>
+    <string name="history_empty_export">Aucun calcul à exporter</string>
+    <string name="share_history">Partager l\'historique</string>
 
     <!-- Currency -->
     <string name="currency_title">Devises</string>
     <string name="currency_live_rates">Taux en direct</string>
-    <string name="currency_search_placeholder">Rechercher une devise ou un pays…</string>
+    <string name="currency_search_placeholder">Rechercher devise ou pays…</string>
     <string name="select_currency">Sélectionner une devise</string>
 
     <!-- Units -->
@@ -70,7 +76,7 @@
     <string name="tool_gst">Calculateur de TVA</string>
     <string name="tool_loan_emi">Mensualité de prêt</string>
     <string name="tool_age">Calculateur d\'âge</string>
-    <string name="tool_date">Calculateur de date</string>
+    <string name="tool_date">Calculateur de dates</string>
     <string name="tool_discount">Remise</string>
     <string name="tool_bmi">Calculateur d\'IMC</string>
 
@@ -79,10 +85,17 @@
     <string name="about_tagline">Précision et élégance</string>
     <string name="about_description">Conçu avec un verre liquide, des animations fluides et un retour haptique tactile.</string>
 
-    <!-- Round 5 Features -->
-    <string name="camera_permission_denied">L\'autorisation de l\'appareil photo est requise pour numériser les calculs.</string>
-    <string name="no_math_recognized">Aucune expression mathématique reconnue dans l\'image.</string>
-    <string name="scan_math_tooltip">Scanner une expression avec l\'appareil photo</string>
-    <string name="mode_programmer">Programmeur</string>
+    <!-- Round 6 Features & Themes -->
+    <string name="voice_input_tooltip">Saisie vocale</string>
+    <string name="voice_offline_unavailable">Pack vocal hors ligne non installé</string>
+    <string name="voice_listening">À l\'écoute des calculs…</string>
+    <string name="voice_permission_required">Autorisation du micro requise pour la saisie vocale</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_amoled">Noir AMOLED</string>
+    <string name="theme_dynamic">Couleurs dynamiques</string>
+    <string name="theme_cyber_neon">Cyber Néon</string>
+    <string name="theme_nordic">Nordique</string>
+    <string name="theme_midnight">Nuit étoilée</string>
     <string name="widget_description">Calculatrice rapide et épurée sur votre écran d\'accueil</string>
 </resources>

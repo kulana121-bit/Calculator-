@@ -40,6 +40,7 @@ data class CalculatorUiState(
     
     // Calculator
     val expression: String = "",
+    val cursorPosition: Int = 0,
     val liveResult: String = "",
     val evaluatedResult: String = "",
     val angleMode: ExpressionEvaluator.AngleMode = ExpressionEvaluator.AngleMode.DEG,
@@ -311,137 +312,166 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         return result
     }
 
-    fun setScannedExpression(raw: String) {
-        val sanitized = sanitizeTrailingOperators(raw)
+    fun setCursorPosition(pos: Int) {
+        val exp = _uiState.value.expression
+        val clamped = pos.coerceIn(0, exp.length)
+        _uiState.update { it.copy(cursorPosition = clamped) }
+    }
+
+    fun onInput(charOrFunc: String) {
+        val currentExp = _uiState.value.expression
+        val currentCursor = _uiState.value.cursorPosition.coerceIn(0, currentExp.length)
+
+        // If cursor is at the end, use the existing optimized tail path
+        if (currentCursor == currentExp.length) {
+            // Power feature: ANS inserts the last evaluated result (or liveResult fallback)
+            if (charOrFunc == "ANS") {
+                val ans = _uiState.value.evaluatedResult.ifEmpty { _uiState.value.liveResult }
+                if (ans.isNotEmpty() && ans != "Error") {
+                    viewModelScope.launch {
+                        _toastEvent.emit("ANS inserted")
+                    }
+                    val rawExp = "$currentExp$ans"
+                    val sanitized = sanitizeTrailingOperators(rawExp)
+                    _uiState.update { it.copy(expression = sanitized, cursorPosition = sanitized.length, isError = false, errorMessage = "") }
+                    recomputeLiveResult()
+                }
+                return
+            }
+
+            // Dedicated Decimal Point handling (NOT a binary op; dedup within current number)
+            if (charOrFunc == ".") {
+                val prevChars = setOf('+', '-', '−', '×', '÷', '^', '(')
+                if (currentExp.isEmpty() || currentExp.last() in prevChars) {
+                    val rawExp = "${currentExp}0."
+                    val sanitized = sanitizeTrailingOperators(rawExp)
+                    _uiState.update { it.copy(expression = sanitized, cursorPosition = sanitized.length, isError = false, errorMessage = "") }
+                    recomputeLiveResult()
+                    return
+                }
+
+                var numLen = 0
+                while (numLen < currentExp.length && (currentExp[currentExp.length - 1 - numLen].isDigit() || currentExp[currentExp.length - 1 - numLen] == '.')) {
+                    numLen++
+                }
+                val currentLiteral = currentExp.takeLast(numLen)
+                if (currentLiteral.contains(".")) {
+                    return
+                }
+
+                val rawExp = "$currentExp."
+                val sanitized = sanitizeTrailingOperators(rawExp)
+                _uiState.update { it.copy(expression = sanitized, cursorPosition = sanitized.length, isError = false, errorMessage = "") }
+                recomputeLiveResult()
+                return
+            }
+
+            val operatorChars = setOf('+', '-', '−', '×', '÷', '^', '.')
+            val isNewBinaryOp = charOrFunc in setOf("+", "-", "−", "×", "÷", "^", "AND", "OR", "XOR", "<<", ">>")
+
+            var baseExp = currentExp
+            if (isNewBinaryOp) {
+                if (currentExp.isEmpty()) {
+                    if (charOrFunc == "-" || charOrFunc == "−") {
+                        baseExp = charOrFunc
+                    }
+                    val sanitized = sanitizeTrailingOperators(baseExp)
+                    _uiState.update { it.copy(expression = sanitized, cursorPosition = sanitized.length, isError = false, errorMessage = "") }
+                    recomputeLiveResult()
+                    return
+                }
+
+                var clusterLen = 0
+                while (clusterLen < currentExp.length && currentExp[currentExp.length - 1 - clusterLen] in operatorChars) {
+                    clusterLen++
+                }
+
+                if (clusterLen == 0) {
+                    baseExp = "$currentExp$charOrFunc"
+                } else {
+                    val cluster = currentExp.takeLast(clusterLen)
+                    if ((charOrFunc == "-" || charOrFunc == "−") && (cluster == "×" || cluster == "÷")) {
+                        baseExp = "$currentExp$charOrFunc"
+                    } else {
+                        val stripped = currentExp.dropLast(clusterLen)
+                        baseExp = "$stripped$charOrFunc"
+                    }
+                }
+
+                val sanitized = sanitizeTrailingOperators(baseExp)
+                _uiState.update { it.copy(expression = sanitized, cursorPosition = sanitized.length, isError = false, errorMessage = "") }
+                recomputeLiveResult()
+                return
+            }
+
+            if (charOrFunc == "%") {
+                if (baseExp.isEmpty()) return
+                val last = baseExp.last()
+                if (last in setOf('+', '-', '−', '×', '÷', '^', '(', '%')) return
+            }
+
+            val rawExp = when (charOrFunc) {
+                "sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "sqrt", "cbrt", "abs", "NOT" -> {
+                    "$baseExp$charOrFunc("
+                }
+                "1/x" -> {
+                    if (baseExp.isEmpty()) "1/(" else "1/($baseExp)"
+                }
+                "x²" -> "$baseExp^2"
+                "x³" -> "$baseExp^3"
+                "x^y" -> "$baseExp^"
+                "+/-" -> {
+                    if (baseExp.startsWith("-(")) {
+                        baseExp.removePrefix("-(").removeSuffix(")")
+                    } else {
+                        "-($baseExp)"
+                    }
+                }
+                else -> "$baseExp$charOrFunc"
+            }
+
+            val sanitized = sanitizeTrailingOperators(rawExp)
+            _uiState.update { it.copy(expression = sanitized, cursorPosition = sanitized.length, isError = false, errorMessage = "") }
+            recomputeLiveResult()
+            return
+        }
+
+        // Tap-to-edit cursor insertion within expression
+        val insertText = when (charOrFunc) {
+            "ANS" -> _uiState.value.evaluatedResult.ifEmpty { _uiState.value.liveResult }.ifEmpty { "" }
+            "sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "sqrt", "cbrt", "abs", "NOT" -> "$charOrFunc("
+            "x²" -> "^2"
+            "x³" -> "^3"
+            "x^y" -> "^"
+            else -> charOrFunc
+        }
+
+        if (insertText.isEmpty()) return
+
+        val before = currentExp.substring(0, currentCursor)
+        val after = currentExp.substring(currentCursor)
+        val newExp = "$before$insertText$after"
+        val newCursor = (currentCursor + insertText.length).coerceIn(0, newExp.length)
+
         _uiState.update {
             it.copy(
-                expression = sanitized,
+                expression = newExp,
+                cursorPosition = newCursor,
                 isError = false,
                 errorMessage = ""
             )
         }
         recomputeLiveResult()
-        onEquals()
-    }
-
-    fun onInput(charOrFunc: String) {
-        val currentExp = _uiState.value.expression
-
-        // Power feature: ANS inserts the last evaluated result (or liveResult fallback)
-        if (charOrFunc == "ANS") {
-            val ans = _uiState.value.evaluatedResult.ifEmpty { _uiState.value.liveResult }
-            if (ans.isNotEmpty() && ans != "Error") {
-                viewModelScope.launch {
-                    _toastEvent.emit("ANS inserted")
-                }
-                val rawExp = "$currentExp$ans"
-                val sanitized = sanitizeTrailingOperators(rawExp)
-                _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
-                recomputeLiveResult()
-            }
-            return
-        }
-
-        // Dedicated Decimal Point handling (NOT a binary op; dedup within current number)
-        if (charOrFunc == ".") {
-            val prevChars = setOf('+', '-', '−', '×', '÷', '^', '(')
-            if (currentExp.isEmpty() || currentExp.last() in prevChars) {
-                val rawExp = "${currentExp}0."
-                val sanitized = sanitizeTrailingOperators(rawExp)
-                _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
-                recomputeLiveResult()
-                return
-            }
-
-            var numLen = 0
-            while (numLen < currentExp.length && (currentExp[currentExp.length - 1 - numLen].isDigit() || currentExp[currentExp.length - 1 - numLen] == '.')) {
-                numLen++
-            }
-            val currentLiteral = currentExp.takeLast(numLen)
-            if (currentLiteral.contains(".")) {
-                // Ignore duplicate decimal point in current numeric literal
-                return
-            }
-
-            val rawExp = "$currentExp."
-            val sanitized = sanitizeTrailingOperators(rawExp)
-            _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
-            recomputeLiveResult()
-            return
-        }
-
-        val operatorChars = setOf('+', '-', '−', '×', '÷', '^', '.')
-        val isNewBinaryOp = charOrFunc in setOf("+", "-", "−", "×", "÷", "^", "AND", "OR", "XOR", "<<", ">>")
-
-        var baseExp = currentExp
-        if (isNewBinaryOp) {
-            if (currentExp.isEmpty()) {
-                if (charOrFunc == "-" || charOrFunc == "−") {
-                    baseExp = charOrFunc
-                }
-                val sanitized = sanitizeTrailingOperators(baseExp)
-                _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
-                recomputeLiveResult()
-                return
-            }
-
-            var clusterLen = 0
-            while (clusterLen < currentExp.length && currentExp[currentExp.length - 1 - clusterLen] in operatorChars) {
-                clusterLen++
-            }
-
-            if (clusterLen == 0) {
-                baseExp = "$currentExp$charOrFunc"
-            } else {
-                val cluster = currentExp.takeLast(clusterLen)
-                if ((charOrFunc == "-" || charOrFunc == "−") && (cluster == "×" || cluster == "÷")) {
-                    baseExp = "$currentExp$charOrFunc"
-                } else {
-                    val stripped = currentExp.dropLast(clusterLen)
-                    baseExp = "$stripped$charOrFunc"
-                }
-            }
-
-            val sanitized = sanitizeTrailingOperators(baseExp)
-            _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
-            recomputeLiveResult()
-            return
-        }
-
-        if (charOrFunc == "%") {
-            if (baseExp.isEmpty()) return
-            val last = baseExp.last()
-            if (last in setOf('+', '-', '−', '×', '÷', '^', '(', '%')) return
-        }
-
-        val rawExp = when (charOrFunc) {
-            "sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "sqrt", "cbrt", "abs", "NOT" -> {
-                "$baseExp$charOrFunc("
-            }
-            "1/x" -> {
-                if (baseExp.isEmpty()) "1/(" else "1/($baseExp)"
-            }
-            "x²" -> "$baseExp^2"
-            "x³" -> "$baseExp^3"
-            "x^y" -> "$baseExp^"
-            "+/-" -> {
-                if (baseExp.startsWith("-(")) {
-                    baseExp.removePrefix("-(").removeSuffix(")")
-                } else {
-                    "-($baseExp)"
-                }
-            }
-            else -> "$baseExp$charOrFunc"
-        }
-
-        val sanitized = sanitizeTrailingOperators(rawExp)
-        _uiState.update { it.copy(expression = sanitized, isError = false, errorMessage = "") }
-        recomputeLiveResult()
     }
 
     fun onBackspace() {
         val currentExp = _uiState.value.expression
-        if (currentExp.isNotEmpty()) {
+        if (currentExp.isEmpty()) return
+
+        val currentCursor = _uiState.value.cursorPosition.coerceIn(0, currentExp.length)
+        if (currentCursor == 0) return
+
+        if (currentCursor == currentExp.length) {
             val updated = when {
                 currentExp.endsWith("sqrt(") || currentExp.endsWith("cbrt(") || currentExp.endsWith("asin(") ||
                         currentExp.endsWith("acos(") || currentExp.endsWith("atan(") -> {
@@ -454,15 +484,34 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
                 currentExp.endsWith("ln(") -> currentExp.dropLast(3)
                 else -> currentExp.dropLast(1)
             }
-            _uiState.update { it.copy(expression = updated, isError = false, errorMessage = "") }
+            _uiState.update { it.copy(expression = updated, cursorPosition = updated.length, isError = false, errorMessage = "") }
             recomputeLiveResult()
+            return
         }
+
+        val before = currentExp.substring(0, currentCursor)
+        val after = currentExp.substring(currentCursor)
+
+        val updatedBefore = when {
+            before.endsWith("sqrt(") || before.endsWith("cbrt(") || before.endsWith("asin(") ||
+                    before.endsWith("acos(") || before.endsWith("atan(") -> before.dropLast(5)
+            before.endsWith("sin(") || before.endsWith("cos(") || before.endsWith("tan(") ||
+                    before.endsWith("log(") || before.endsWith("abs(") -> before.dropLast(4)
+            before.endsWith("ln(") -> before.dropLast(3)
+            else -> before.dropLast(1)
+        }
+
+        val combined = "$updatedBefore$after"
+        val newCursor = updatedBefore.length.coerceIn(0, combined.length)
+        _uiState.update { it.copy(expression = combined, cursorPosition = newCursor, isError = false, errorMessage = "") }
+        recomputeLiveResult()
     }
 
     fun onClear() {
         _uiState.update {
             it.copy(
                 expression = "",
+                cursorPosition = 0,
                 liveResult = "",
                 evaluatedResult = "",
                 isError = false,

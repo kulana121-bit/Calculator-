@@ -289,7 +289,7 @@ fun ToolsScreen(
                             selectedTool = null
                         },
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
                             .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
@@ -705,16 +705,16 @@ private fun TipToolView(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(
                 onClick = { viewModel.setTipParams(state.tipBill, state.tipPercent, (state.tipPeopleCount - 1).coerceAtLeast(1), state.tipRoundUp) },
-                modifier = Modifier.size(34.dp).clip(CircleShape).background(if (theme.isLight) Color.White else Color(0x22FFFFFF))
+                modifier = Modifier.size(48.dp).clip(CircleShape).background(if (theme.isLight) Color.White else Color(0x22FFFFFF))
             ) {
-                Icon(Icons.Default.Remove, contentDescription = null, tint = theme.textPrimary, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Remove, contentDescription = null, tint = theme.textPrimary, modifier = Modifier.size(20.dp))
             }
             Text("${state.tipPeopleCount}", color = theme.textPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             IconButton(
                 onClick = { viewModel.setTipParams(state.tipBill, state.tipPercent, state.tipPeopleCount + 1, state.tipRoundUp) },
-                modifier = Modifier.size(34.dp).clip(CircleShape).background(if (theme.isLight) Color.White else Color(0x22FFFFFF))
+                modifier = Modifier.size(48.dp).clip(CircleShape).background(if (theme.isLight) Color.White else Color(0x22FFFFFF))
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = theme.textPrimary, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Add, contentDescription = null, tint = theme.textPrimary, modifier = Modifier.size(20.dp))
             }
         }
     }

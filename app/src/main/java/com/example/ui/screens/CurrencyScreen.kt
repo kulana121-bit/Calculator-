@@ -230,7 +230,7 @@ fun CurrencyScreen(
             Box(
                 modifier = Modifier
                     .padding(vertical = 4.dp)
-                    .size(44.dp)
+                    .size(48.dp)
                     .shadow(
                         elevation = 8.dp,
                         shape = CircleShape,

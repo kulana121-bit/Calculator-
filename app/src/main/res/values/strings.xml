@@ -29,6 +29,7 @@
     <!-- Calculator Display & Keypad -->
     <string name="mode_standard">Standard</string>
     <string name="mode_scientific">Scientific</string>
+    <string name="mode_programmer">Programmer</string>
     <string name="swipe_to_backspace">Swipe to backspace</string>
     <string name="copied">Copied!</string>
     <string name="error_text">Error</string>
@@ -51,6 +52,11 @@
     <string name="history_copy_result">Copy Result</string>
     <string name="history_reuse">Reuse</string>
     <string name="history_delete">Delete</string>
+    <string name="history_export_title">Export History</string>
+    <string name="history_export_text">Export as Text</string>
+    <string name="history_export_csv">Export as CSV</string>
+    <string name="history_empty_export">No calculations to export</string>
+    <string name="share_history">Share History</string>
 
     <!-- Currency -->
     <string name="currency_title">Currency</string>
@@ -79,10 +85,17 @@
     <string name="about_tagline">Precision &amp; Elegance</string>
     <string name="about_description">Designed with liquid glassmorphism, physical spring interactions, and tactile haptic feedback.</string>
 
-    <!-- Round 5 Features -->
-    <string name="camera_permission_denied">Camera permission is required to scan math expressions.</string>
-    <string name="no_math_recognized">No math expression recognized in image.</string>
-    <string name="scan_math_tooltip">Scan math with camera</string>
-    <string name="mode_programmer">Programmer</string>
+    <!-- Round 6 Features & Themes -->
+    <string name="voice_input_tooltip">Voice Input</string>
+    <string name="voice_offline_unavailable">Offline voice pack not installed</string>
+    <string name="voice_listening">Listening for math…</string>
+    <string name="voice_permission_required">Microphone permission required for voice input</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED Black</string>
+    <string name="theme_dynamic">Dynamic Colors</string>
+    <string name="theme_cyber_neon">Cyber Neon</string>
+    <string name="theme_nordic">Nordic</string>
+    <string name="theme_midnight">Midnight Light</string>
     <string name="widget_description">Quick and clean calculator on your home screen</string>
 </resources>

@@ -2,17 +2,21 @@ package com.example.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
+import android.speech.SpeechRecognizer
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.launch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -34,6 +38,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,15 +53,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,18 +75,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.example.R
 import com.example.engine.ExpressionEvaluator
 import com.example.ui.components.AppNavTab
 import com.example.ui.components.CalcButtonType
@@ -88,9 +100,7 @@ import com.example.ui.components.LiquidGlassCard
 import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.CalculatorUiState
 import com.example.ui.viewmodel.CalculatorViewModel
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.example.util.VoiceInputHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -108,58 +118,6 @@ fun CalculatorScreen(
 
     var showModeDropdown by remember { mutableStateOf(false) }
     var showCopiedToast by remember { mutableStateOf(false) }
-
-    // Camera Scan Solve setup (fully on-device via ML Kit Text Recognition)
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        if (bitmap != null) {
-            try {
-                val image = InputImage.fromBitmap(bitmap, 0)
-                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-                recognizer.process(image)
-                    .addOnSuccessListener { visionText ->
-                        val raw = visionText.text
-                        val cleaned = normalizeMathExpression(raw)
-                        if (cleaned.isNotBlank()) {
-                            viewModel.setScannedExpression(cleaned)
-                            Toast.makeText(context, "Scanned: $cleaned", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(context, "No math expression recognized", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(context, "Recognition failed: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                    }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Error processing image", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            cameraLauncher.launch(null)
-        } else {
-            Toast.makeText(context, "Camera permission is required to scan equations", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    val onScanClick: () -> Unit = {
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            cameraLauncher.launch(null)
-        } else {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
 
     val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
@@ -182,8 +140,7 @@ fun CalculatorScreen(
                     viewModel = viewModel,
                     haptic = haptic,
                     showModeDropdown = showModeDropdown,
-                    onShowModeDropdown = { showModeDropdown = it },
-                    onScanClick = onScanClick
+                    onShowModeDropdown = { showModeDropdown = it }
                 )
                 
                 CalculatorDisplay(
@@ -215,14 +172,14 @@ fun CalculatorScreen(
                     ProgrammerBitwiseKeypad(
                         theme = theme,
                         viewModel = viewModel,
-                        buttonHeight = 36.dp
+                        buttonHeight = 48.dp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 } else if (state.isScientificExpanded) {
                     ScientificKeypad(
                         theme = theme,
                         viewModel = viewModel,
-                        buttonHeight = 36.dp
+                        buttonHeight = 48.dp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
@@ -230,7 +187,7 @@ fun CalculatorScreen(
                     state = state,
                     theme = theme,
                     viewModel = viewModel,
-                    buttonHeight = 44.dp,
+                    buttonHeight = 48.dp,
                     spacing = 6.dp
                 )
             }
@@ -249,8 +206,7 @@ fun CalculatorScreen(
                 viewModel = viewModel,
                 haptic = haptic,
                 showModeDropdown = showModeDropdown,
-                onShowModeDropdown = { showModeDropdown = it },
-                onScanClick = onScanClick
+                onShowModeDropdown = { showModeDropdown = it }
             )
 
             CalculatorDisplay(
@@ -274,13 +230,13 @@ fun CalculatorScreen(
                 ProgrammerBitwiseKeypad(
                     theme = theme,
                     viewModel = viewModel,
-                    buttonHeight = 42.dp
+                    buttonHeight = 48.dp
                 )
             } else if (state.isScientificExpanded) {
                 ScientificKeypad(
                     theme = theme,
                     viewModel = viewModel,
-                    buttonHeight = 38.dp
+                    buttonHeight = 48.dp
                 )
             }
 
@@ -293,36 +249,6 @@ fun CalculatorScreen(
             )
         }
     }
-}
-
-private fun normalizeMathExpression(raw: String): String {
-    val trimmed = raw.trim()
-    val mapped = trimmed
-        .replace("×", "*")
-        .replace("x", "*", ignoreCase = true)
-        .replace("X", "*")
-        .replace("÷", "/")
-        .replace(":", "/")
-        .replace("−", "-")
-        .replace("—", "-")
-        .replace("–", "-")
-        .replace(" ", "")
-        .replace("\n", "")
-
-    val sb = StringBuilder()
-    for (ch in mapped) {
-        if (ch.isDigit() || ch in "+-*/^().%") {
-            sb.append(
-                when (ch) {
-                    '*' -> '×'
-                    '/' -> '÷'
-                    '-' -> '−'
-                    else -> ch
-                }
-            )
-        }
-    }
-    return sb.toString()
 }
 
 @Composable
@@ -355,19 +281,19 @@ private fun ProgrammerConversions(
         ) {
             ProgrammerBaseRow("HEX", hex, theme) {
                 viewModel.copyToClipboard(hex)
-                Toast.makeText(context, "Copied HEX: $hex", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${context.getString(R.string.copied)} (HEX: $hex)", Toast.LENGTH_SHORT).show()
             }
             ProgrammerBaseRow("DEC", dec, theme) {
                 viewModel.copyToClipboard(dec)
-                Toast.makeText(context, "Copied DEC: $dec", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${context.getString(R.string.copied)} (DEC: $dec)", Toast.LENGTH_SHORT).show()
             }
             ProgrammerBaseRow("OCT", oct, theme) {
                 viewModel.copyToClipboard(oct)
-                Toast.makeText(context, "Copied OCT: $oct", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${context.getString(R.string.copied)} (OCT: $oct)", Toast.LENGTH_SHORT).show()
             }
             ProgrammerBaseRow("BIN", bin, theme) {
                 viewModel.copyToClipboard(bin)
-                Toast.makeText(context, "Copied BIN: $bin", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${context.getString(R.string.copied)} (BIN: $bin)", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -383,9 +309,10 @@ private fun ProgrammerBaseRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
+            .defaultMinSize(minHeight = 48.dp)
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 2.dp, horizontal = 4.dp),
+            .padding(vertical = 4.dp, horizontal = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -411,7 +338,7 @@ private fun ProgrammerBaseRow(
 private fun ProgrammerBitwiseKeypad(
     theme: ThemeMode,
     viewModel: CalculatorViewModel,
-    buttonHeight: androidx.compose.ui.unit.Dp = 42.dp
+    buttonHeight: androidx.compose.ui.unit.Dp = 48.dp
 ) {
     Row(
         modifier = Modifier
@@ -443,8 +370,7 @@ private fun CalculatorTopBar(
     viewModel: CalculatorViewModel,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     showModeDropdown: Boolean,
-    onShowModeDropdown: (Boolean) -> Unit,
-    onScanClick: () -> Unit
+    onShowModeDropdown: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -472,9 +398,9 @@ private fun CalculatorTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val modeTitle = when {
-                    state.isProgrammerMode -> "Programmer"
-                    state.isScientificExpanded -> "Scientific"
-                    else -> "Standard"
+                    state.isProgrammerMode -> stringResource(R.string.mode_programmer)
+                    state.isScientificExpanded -> stringResource(R.string.mode_scientific)
+                    else -> stringResource(R.string.mode_standard)
                 }
                 Text(
                     text = modeTitle,
@@ -500,7 +426,7 @@ private fun CalculatorTopBar(
                     text = {
                         val isStandard = !state.isScientificExpanded && !state.isProgrammerMode
                         Text(
-                            "Standard",
+                            stringResource(R.string.mode_standard),
                             fontWeight = if (isStandard) FontWeight.Bold else FontWeight.Normal,
                             color = if (isStandard) theme.primaryAccent else theme.textPrimary
                         )
@@ -514,7 +440,7 @@ private fun CalculatorTopBar(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            "Scientific",
+                            stringResource(R.string.mode_scientific),
                             fontWeight = if (state.isScientificExpanded) FontWeight.Bold else FontWeight.Normal,
                             color = if (state.isScientificExpanded) theme.primaryAccent else theme.textPrimary
                         )
@@ -527,7 +453,7 @@ private fun CalculatorTopBar(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            "Programmer",
+                            stringResource(R.string.mode_programmer),
                             fontWeight = if (state.isProgrammerMode) FontWeight.Bold else FontWeight.Normal,
                             color = if (state.isProgrammerMode) theme.primaryAccent else theme.textPrimary
                         )
@@ -540,15 +466,89 @@ private fun CalculatorTopBar(
             }
         }
 
-        // Top bar right actions: DEG/RAD toggle, Scan button, History icon & Settings icon
+        val context = LocalContext.current
+        var isVoiceListening by remember { mutableStateOf(false) }
+        var activeSpeechRecognizer by remember { mutableStateOf<SpeechRecognizer?>(null) }
+
+        val voicePermissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                if (!VoiceInputHelper.isOfflineRecognitionAvailable(context)) {
+                    Toast.makeText(context, context.getString(R.string.voice_offline_unavailable), Toast.LENGTH_LONG).show()
+                } else {
+                    activeSpeechRecognizer?.destroy()
+                    activeSpeechRecognizer = VoiceInputHelper.startListeningOffline(
+                        context = context,
+                        onResult = { parsedMath ->
+                            isVoiceListening = false
+                            if (parsedMath.isNotBlank()) {
+                                viewModel.onInput(parsedMath)
+                            }
+                        },
+                        onError = { err ->
+                            isVoiceListening = false
+                            if (err == "OFFLINE_UNAVAILABLE") {
+                                Toast.makeText(context, context.getString(R.string.voice_offline_unavailable), Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        onListeningStateChange = { listening ->
+                            isVoiceListening = listening
+                        }
+                    )
+                }
+            } else {
+                Toast.makeText(context, context.getString(R.string.voice_permission_required), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Voice Listening Dialog / Indicator
+        if (isVoiceListening) {
+            AlertDialog(
+                onDismissRequest = {
+                    activeSpeechRecognizer?.stopListening()
+                    activeSpeechRecognizer?.destroy()
+                    activeSpeechRecognizer = null
+                    isVoiceListening = false
+                },
+                title = {
+                    Text(stringResource(R.string.voice_listening), fontWeight = FontWeight.Bold, color = theme.textPrimary)
+                },
+                text = {
+                    Text(
+                        text = "Say calculations (e.g. \"five times eight\", \"sqrt 144\")",
+                        color = theme.textSecondary,
+                        fontSize = 14.sp
+                    )
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            activeSpeechRecognizer?.stopListening()
+                            activeSpeechRecognizer?.destroy()
+                            activeSpeechRecognizer = null
+                            isVoiceListening = false
+                        }
+                    ) {
+                        Text(stringResource(R.string.cancel), color = theme.primaryAccent)
+                    }
+                },
+                containerColor = if (theme.isLight) Color.White else Color(0xFF242428),
+                shape = RoundedCornerShape(24.dp)
+            )
+        }
+
+        // Top bar right actions: DEG/RAD toggle, Voice Mic, History icon & Settings icon
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // DEG / RAD Toggle when scientific is active
             if (state.isScientificExpanded) {
                 Box(
                     modifier = Modifier
+                        .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
                         .clip(CircleShape)
                         .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
                         .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
@@ -556,31 +556,69 @@ private fun CalculatorTopBar(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             viewModel.toggleAngleMode()
                         }
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (state.angleMode == ExpressionEvaluator.AngleMode.DEG) "DEG" else "RAD",
                         color = theme.primaryAccent,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            // Camera Scan Button (Camera Icon)
+            // Voice Input Mic Button (Offline-only)
             IconButton(
-                onClick = onScanClick,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    if (isVoiceListening) {
+                        activeSpeechRecognizer?.stopListening()
+                        activeSpeechRecognizer?.destroy()
+                        activeSpeechRecognizer = null
+                        isVoiceListening = false
+                    } else {
+                        val permCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+                        if (permCheck == PackageManager.PERMISSION_GRANTED) {
+                            if (!VoiceInputHelper.isOfflineRecognitionAvailable(context)) {
+                                Toast.makeText(context, context.getString(R.string.voice_offline_unavailable), Toast.LENGTH_LONG).show()
+                            } else {
+                                activeSpeechRecognizer?.destroy()
+                                activeSpeechRecognizer = VoiceInputHelper.startListeningOffline(
+                                    context = context,
+                                    onResult = { parsedMath ->
+                                        isVoiceListening = false
+                                        if (parsedMath.isNotBlank()) {
+                                            viewModel.onInput(parsedMath)
+                                        }
+                                    },
+                                    onError = { err ->
+                                        isVoiceListening = false
+                                        if (err == "OFFLINE_UNAVAILABLE") {
+                                            Toast.makeText(context, context.getString(R.string.voice_offline_unavailable), Toast.LENGTH_LONG).show()
+                                        }
+                                    },
+                                    onListeningStateChange = { listening ->
+                                        isVoiceListening = listening
+                                    }
+                                )
+                            }
+                        } else {
+                            voicePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    }
+                },
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
-                    .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
-                    .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
-                    .testTag("calculator_scan_btn")
+                    .background(if (isVoiceListening) theme.primaryAccent.copy(alpha = 0.25f) else if (theme.isLight) Color.White else Color(0x33FFFFFF))
+                    .border(1.dp, if (isVoiceListening) theme.primaryAccent else if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
+                    .testTag("calculator_mic_btn")
             ) {
                 Icon(
-                    imageVector = Icons.Default.CameraAlt,
-                    contentDescription = "Scan Equation",
-                    tint = theme.textPrimary,
+                    imageVector = Icons.Default.Mic,
+                    contentDescription = stringResource(R.string.voice_input_tooltip),
+                    tint = if (isVoiceListening) theme.primaryAccent else theme.textPrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -591,7 +629,7 @@ private fun CalculatorTopBar(
                     viewModel.selectTab(AppNavTab.HISTORY)
                 },
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
                     .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
@@ -599,7 +637,7 @@ private fun CalculatorTopBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.History,
-                    contentDescription = "History",
+                    contentDescription = stringResource(R.string.history_title),
                     tint = theme.textPrimary,
                     modifier = Modifier.size(20.dp)
                 )
@@ -611,7 +649,7 @@ private fun CalculatorTopBar(
                     viewModel.openSettings()
                 },
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
                     .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
@@ -619,7 +657,7 @@ private fun CalculatorTopBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = stringResource(R.string.settings_title),
                     tint = theme.textPrimary,
                     modifier = Modifier.size(20.dp)
                 )
@@ -640,6 +678,7 @@ private fun CalculatorDisplay(
     expScrollState: androidx.compose.foundation.ScrollState,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var dragAccumulator by remember { mutableFloatStateOf(0f) }
     val shakeOffset = remember { Animatable(0f) }
 
@@ -714,21 +753,21 @@ private fun CalculatorDisplay(
             ) {
                 if (state.hasMemory) {
                     Text(
-                        text = "M = ${ExpressionEvaluator.formatResult(state.memoryValue)}",
+                        text = "M = ${ExpressionEvaluator.formatForDisplay(ExpressionEvaluator.formatResult(state.memoryValue))}",
                         color = theme.primaryAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 } else {
                     Text(
-                        text = "Swipe to backspace",
+                        text = stringResource(R.string.swipe_to_backspace),
                         color = theme.textSecondary.copy(alpha = 0.5f),
                         fontSize = 11.sp
                     )
                 }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (state.expression.isNotEmpty()) {
@@ -737,7 +776,7 @@ private fun CalculatorDisplay(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 viewModel.onBackspace()
                             },
-                            modifier = Modifier.size(24.dp).testTag("display_backspace_btn")
+                            modifier = Modifier.size(48.dp).testTag("display_backspace_btn")
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Backspace,
@@ -750,7 +789,7 @@ private fun CalculatorDisplay(
 
                     if (showCopiedToast) {
                         Text(
-                            text = "Copied!",
+                            text = stringResource(R.string.copied),
                             color = theme.primaryAccent,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -762,19 +801,20 @@ private fun CalculatorDisplay(
                                     state.liveResult.ifEmpty { state.expression }
                                 }
                                 viewModel.copyToClipboard(textToCopy)
+                                Toast.makeText(context, context.getString(R.string.copied), Toast.LENGTH_SHORT).show()
                                 onShowCopiedToast(true)
                                 scope.launch {
                                     delay(1600)
                                     onShowCopiedToast(false)
                                 }
                             },
-                            modifier = Modifier.size(24.dp).testTag("display_copy_btn")
+                            modifier = Modifier.size(48.dp).testTag("display_copy_btn")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy",
                                 tint = theme.textSecondary.copy(alpha = 0.6f),
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -783,7 +823,7 @@ private fun CalculatorDisplay(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Small calculation expression: e.g. 2,500 × 4 + 320
+            // Small calculation expression: e.g. 2,500 × 4 + 320 with Tap-to-edit blinking cursor
             val expFontSize = when {
                 state.expression.length > 30 -> 13.sp
                 state.expression.length > 20 -> 15.sp
@@ -791,10 +831,34 @@ private fun CalculatorDisplay(
                 else -> 20.sp
             }
 
+            var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+            val infiniteTransition = rememberInfiniteTransition(label = "calcCursorBlink")
+            val cursorAlpha by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 0f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 530, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "calcCursorAlpha"
+            )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(expScrollState, reverseScrolling = true),
+                    .horizontalScroll(expScrollState, reverseScrolling = true)
+                    .pointerInput(state.expression) {
+                        detectTapGestures { tapOffset ->
+                            val layout = textLayoutResult
+                            val newPos = if (layout != null) {
+                                layout.getOffsetForPosition(tapOffset).coerceIn(0, state.expression.length)
+                            } else {
+                                state.expression.length
+                            }
+                            viewModel.setCursorPosition(newPos)
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
+                    },
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -806,21 +870,56 @@ private fun CalculatorDisplay(
                     fontFamily = FontFamily.Monospace,
                     textAlign = TextAlign.End,
                     maxLines = 1,
-                    modifier = Modifier.testTag("calc_expression_text")
+                    onTextLayout = { textLayoutResult = it },
+                    modifier = Modifier
+                        .testTag("calc_expression_text")
+                        .drawWithContent {
+                            drawContent()
+                            val layout = textLayoutResult
+                            if (layout != null && cursorAlpha > 0.35f && !state.isError) {
+                                val targetPos = if (state.expression.isEmpty()) 0 else state.cursorPosition.coerceIn(0, state.expression.length)
+                                val cursorRect = layout.getCursorRect(targetPos)
+                                drawRect(
+                                    color = theme.primaryAccent,
+                                    topLeft = Offset(cursorRect.left, cursorRect.top + 2.dp.toPx()),
+                                    size = androidx.compose.ui.geometry.Size(
+                                        2.dp.toPx(),
+                                        (cursorRect.height - 4.dp.toPx()).coerceAtLeast(14.dp.toPx())
+                                    )
+                                )
+                            }
+                        }
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Large right-aligned result number: e.g. 10,320
+            // Large right-aligned result number (Tap result to copy with locale-aware thousands grouping)
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        val textToCopy = state.evaluatedResult.ifEmpty {
+                            state.liveResult.ifEmpty { state.expression.ifEmpty { "0" } }
+                        }
+                        if (textToCopy != "0" && textToCopy.isNotEmpty() && !state.isError) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            viewModel.copyToClipboard(textToCopy)
+                            Toast.makeText(context, context.getString(R.string.copied), Toast.LENGTH_SHORT).show()
+                            onShowCopiedToast(true)
+                            scope.launch {
+                                delay(1600)
+                                onShowCopiedToast(false)
+                            }
+                        }
+                    },
                 horizontalAlignment = Alignment.End
             ) {
                 val displayResult = when {
-                    state.isError -> state.errorMessage.ifEmpty { "Error" }
-                    state.evaluatedResult.isNotEmpty() -> state.evaluatedResult
-                    state.liveResult.isNotEmpty() -> state.liveResult
+                    state.isError -> state.errorMessage.ifEmpty { stringResource(R.string.error_text) }
+                    state.evaluatedResult.isNotEmpty() -> ExpressionEvaluator.formatForDisplay(state.evaluatedResult)
+                    state.liveResult.isNotEmpty() -> ExpressionEvaluator.formatForDisplay(state.liveResult)
                     state.expression.isNotEmpty() -> state.expression
                     else -> "0"
                 }

@@ -1,49 +1,50 @@
 <resources>
-    <string name="app_name">कैलकुलेटर</string>
+    <string name="app_name">Calculator</string>
 
     <!-- Nav Tabs -->
     <string name="tab_calc">कैलकुलेटर</string>
     <string name="tab_currency">मुद्रा</string>
-    <string name="tab_units">इकाइयाँ</string>
+    <string name="tab_units">इकाइयां</string>
     <string name="tab_tools">टूल्स</string>
     <string name="tab_history">इतिहास</string>
 
     <!-- Settings -->
     <string name="settings_title">सेटिंग्स</string>
     <string name="settings_themes">थीम और रंग</string>
-    <string name="settings_haptic">हैप्टिक फीडबैक</string>
+    <string name="settings_haptic">हैप्टिक फ़ीडबैक</string>
     <string name="settings_sound">ध्वनि</string>
     <string name="settings_language">भाषा</string>
-    <string name="settings_rate_app">ऐप को रेट करें</string>
-    <string name="settings_share_app">ऐप शेयर करें</string>
+    <string name="settings_rate_app">रेट करें</string>
+    <string name="settings_share_app">शेयर करें</string>
     <string name="settings_about">के बारे में</string>
-    <string name="rate_dialog_title">क्या आपको Calculator पसंद आ रहा है?</string>
-    <string name="rate_dialog_desc">Calculator का उपयोग करने के लिए धन्यवाद! हम बेहतरीन गणना अनुभव प्रदान करने का प्रयास करते हैं।</string>
-    <string name="rate_5_stars">5 स्टार रेटिंग दें ⭐</string>
+    <string name="rate_dialog_title">Calculator पसंद आ रहा है?</string>
+    <string name="rate_dialog_desc">Calculator का उपयोग करने के लिए धन्यवाद! हम सर्वोत्तम अनुभव प्रदान करने का प्रयास करते हैं।</string>
+    <string name="rate_5_stars">5 स्टार दें ⭐</string>
     <string name="maybe_later">बाद में</string>
     <string name="select_language">भाषा चुनें</string>
     <string name="close">बंद करें</string>
-    <string name="share_app_text">चेक करें Calculator - मुद्रा और इकाई परिवर्तक के साथ एक प्रीमियम कैलकुलेटर ऐप!</string>
+    <string name="share_app_text">Calculator देखें - एक सुंदर और आधुनिक कैलकुलेटर ऐप जिसमें मुद्रा/इकाई परिवर्तक और विजेट शामिल है!</string>
     <string name="share_chooser_title">Calculator शेयर करें</string>
 
     <!-- Calculator Display & Keypad -->
     <string name="mode_standard">मानक</string>
     <string name="mode_scientific">वैज्ञानिक</string>
+    <string name="mode_programmer">प्रोग्रामर</string>
     <string name="swipe_to_backspace">हटाने के लिए स्वाइप करें</string>
     <string name="copied">कॉपी किया गया!</string>
     <string name="error_text">त्रुटि</string>
-    <string name="calc_memory_cleared">मेमोरी साफ़ की गई</string>
+    <string name="calc_memory_cleared">मेमोरी साफ़ हो गई</string>
 
     <!-- History -->
     <string name="history_title">इतिहास</string>
-    <string name="history_calculations_count">गणनाएँ</string>
-    <string name="history_search_placeholder">गणनाएँ खोजें…</string>
-    <string name="history_empty_title">अभी कोई इतिहास नहीं है</string>
-    <string name="history_empty_match_title">कोई मिलती-जुलती गणना नहीं</string>
-    <string name="history_empty_desc">कैलकुलेटर में गणना करें और आपके परिणाम यहाँ अपने आप सहेजे जाएँगे।</string>
+    <string name="history_calculations_count">गणनाएं</string>
+    <string name="history_search_placeholder">गणनाएं खोजें…</string>
+    <string name="history_empty_title">अभी कोई गणना नहीं</string>
+    <string name="history_empty_match_title">कोई मेल नहीं मिला</string>
+    <string name="history_empty_desc">कैलकुलेटर में गणना करें, परिणाम स्वतः यहाँ सुरक्षित हो जाएंगे।</string>
     <string name="history_empty_match_desc">अपनी खोज साफ़ करें या पसंदीदा फ़िल्टर हटाएं।</string>
-    <string name="history_back_to_calc">कैलकुलेटर पर वापस जाएँ</string>
-    <string name="history_clear_all">सारा इतिहास साफ़ करें</string>
+    <string name="history_back_to_calc">कैलकुलेटर पर वापस</string>
+    <string name="history_clear_all">पूरा इतिहास हटाएं</string>
     <string name="history_clear_confirm">क्या आप वाकई गणना इतिहास साफ़ करना चाहते हैं?</string>
     <string name="history_clear_btn">साफ़ करें</string>
     <string name="cancel">रद्द करें</string>
@@ -51,6 +52,11 @@
     <string name="history_copy_result">परिणाम कॉपी करें</string>
     <string name="history_reuse">पुनः उपयोग</string>
     <string name="history_delete">हटाएं</string>
+    <string name="history_export_title">इतिहास निर्यात करें</string>
+    <string name="history_export_text">टेक्स्ट के रूप में निर्यात</string>
+    <string name="history_export_csv">CSV के रूप में निर्यात</string>
+    <string name="history_empty_export">निर्यात के लिए कोई गणना नहीं</string>
+    <string name="share_history">इतिहास शेयर करें</string>
 
     <!-- Currency -->
     <string name="currency_title">मुद्रा</string>
@@ -79,10 +85,17 @@
     <string name="about_tagline">सटीकता और सुंदरता</string>
     <string name="about_description">लिक्विड ग्लासमॉर्फिज़्म, सहज स्प्रिंग एनिमेशन और हैप्टिक फ़ीडबैक के साथ डिज़ाइन किया गया।</string>
 
-    <!-- Round 5 Features -->
-    <string name="camera_permission_denied">गणितीय समीकरण स्कैन करने के लिए कैमरा अनुमति आवश्यक है।</string>
-    <string name="no_math_recognized">छवि में कोई गणितीय समीकरण नहीं मिला।</string>
-    <string name="scan_math_tooltip">कैमरा से समीकरण स्कैन करें</string>
-    <string name="mode_programmer">प्रोग्रामर</string>
+    <!-- Round 6 Features & Themes -->
+    <string name="voice_input_tooltip">ध्वनि इनपुट</string>
+    <string name="voice_offline_unavailable">ऑफ़लाइन वॉइस पैक इंस्टॉल नहीं है</string>
+    <string name="voice_listening">समीकरण सुन रहे हैं…</string>
+    <string name="voice_permission_required">ध्वनि इनपुट के लिए माइक्रोफ़ोन अनुमति आवश्यक है</string>
+    <string name="theme_light">लाइट</string>
+    <string name="theme_dark">डार्क</string>
+    <string name="theme_amoled">एमोलेड ब्लैक</string>
+    <string name="theme_dynamic">डायनामिक रंग</string>
+    <string name="theme_cyber_neon">साइबर नियॉन</string>
+    <string name="theme_nordic">नॉर्डिक</string>
+    <string name="theme_midnight">मिडनाइट लाइट</string>
     <string name="widget_description">आपकी होम स्क्रीन पर त्वरित और सुंदर कैलकुलेटर</string>
 </resources>

@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FilterDrama
@@ -53,9 +55,21 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.components.LiquidGlassCard
 import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.CalculatorViewModel
+
+fun getThemeTitleRes(theme: ThemeMode): Int = when (theme) {
+    ThemeMode.LIGHT, ThemeMode.AURORA, ThemeMode.ONE_UI_MINT, ThemeMode.ONE_UI_MINT_LIGHT, ThemeMode.IOS_LIGHT, ThemeMode.SOLAR_FLARE, ThemeMode.EMERALD_MINT, ThemeMode.ROSE_GOLD, ThemeMode.FROSTED_GLASS, ThemeMode.RETRO_NEO -> R.string.theme_light
+    ThemeMode.DARK, ThemeMode.IOS_DARK, ThemeMode.TITANIUM_DARK -> R.string.theme_dark
+    ThemeMode.AMOLED, ThemeMode.AMOLED_BLACK -> R.string.theme_amoled
+    ThemeMode.DYNAMIC -> R.string.theme_dynamic
+    ThemeMode.CYBER_NEON, ThemeMode.CYBERPUNK_NEON -> R.string.theme_cyber_neon
+    ThemeMode.NORDIC, ThemeMode.DEEP_OCEAN -> R.string.theme_nordic
+    ThemeMode.MIDNIGHT_LIGHT, ThemeMode.VIOLET_INDIGO -> R.string.theme_midnight
+}
 
 @Composable
 fun ThemeScreen(
@@ -83,13 +97,13 @@ fun ThemeScreen(
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(if (currentTheme.isLight) Color.White else Color(0x33FFFFFF))
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.close),
                     tint = currentTheme.textPrimary
                 )
             }
@@ -97,7 +111,7 @@ fun ThemeScreen(
             Spacer(modifier = Modifier.width(12.dp))
 
             Text(
-                text = "Themes",
+                text = stringResource(R.string.settings_themes),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = currentTheme.textPrimary
@@ -140,6 +154,8 @@ private fun ThemePreviewCard(
     val icon: ImageVector = when (themeItem) {
         ThemeMode.LIGHT -> Icons.Default.LightMode
         ThemeMode.DARK -> Icons.Default.DarkMode
+        ThemeMode.AMOLED -> Icons.Default.Brightness2
+        ThemeMode.DYNAMIC -> Icons.Default.AutoAwesome
         ThemeMode.CYBER_NEON -> Icons.Default.Stream
         ThemeMode.NORDIC -> Icons.Default.FilterDrama
         ThemeMode.MIDNIGHT_LIGHT -> Icons.Default.NightsStay
@@ -237,13 +253,13 @@ private fun ThemePreviewCard(
 
             Column {
                 Text(
-                    text = themeItem.title,
+                    text = stringResource(getThemeTitleRes(themeItem)),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = themeItem.textPrimary
                 )
                 Text(
-                    text = if (themeItem.isLight) "Light System" else "Dark System",
+                    text = if (themeItem.isLight) stringResource(R.string.theme_light) else stringResource(R.string.theme_dark),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Normal,
                     color = themeItem.textSecondary

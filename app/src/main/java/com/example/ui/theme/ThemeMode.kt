@@ -136,6 +136,52 @@ enum class ThemeMode(
         isLight = true
     ),
 
+    AMOLED(
+        title = "AMOLED Black",
+        description = "Pure pitch-black OLED canvas with high-contrast electric orange highlights",
+        primaryAccent = Color(0xFFFF8A00),
+        secondaryAccent = Color(0xFFFFA02E),
+        tertiaryAccent = Color(0xFFFF6230),
+        surfaceGlass = Color(0xFF000000),
+        surfaceGlassLight = Color(0xFF121212),
+        borderGlass = Color(0x33FFFFFF),
+        backgroundColors = listOf(
+            Color(0xFF000000),
+            Color(0xFF000000),
+            Color(0xFF000000)
+        ),
+        buttonNumberColor = Color(0xFF111111),
+        buttonOpColor = Color(0x33FF8A00),
+        buttonFuncColor = Color(0xFF181818),
+        buttonActionColor = Color(0xFFFF8A00),
+        textPrimary = Color(0xFFFFFFFF),
+        textSecondary = Color(0xFF8E8E93),
+        isLight = false
+    ),
+
+    DYNAMIC(
+        title = "Dynamic Colors",
+        description = "Material You dynamic colors harmonized with your system wallpaper",
+        primaryAccent = Color(0xFF3B82F6),
+        secondaryAccent = Color(0xFF60A5FA),
+        tertiaryAccent = Color(0xFF93C5FD),
+        surfaceGlass = Color(0xCC1E293B),
+        surfaceGlassLight = Color(0xEE334155),
+        borderGlass = Color(0x2EFFFFFF),
+        backgroundColors = listOf(
+            Color(0xFF0F172A),
+            Color(0xFF1E293B),
+            Color(0xFF0F172A)
+        ),
+        buttonNumberColor = Color(0xFF1E293B),
+        buttonOpColor = Color(0x3D3B82F6),
+        buttonFuncColor = Color(0xFF334155),
+        buttonActionColor = Color(0xFF3B82F6),
+        textPrimary = Color(0xFFFFFFFF),
+        textSecondary = Color(0xFF94A3B8),
+        isLight = false
+    ),
+
     // Compatibility aliases
     AURORA(
         title = "Light",
@@ -425,6 +471,6 @@ enum class ThemeMode(
     }
 
     companion object {
-        val selectableThemes = listOf(LIGHT, DARK, CYBER_NEON, NORDIC, MIDNIGHT_LIGHT)
+        val selectableThemes = listOf(LIGHT, DARK, AMOLED, DYNAMIC, CYBER_NEON, NORDIC, MIDNIGHT_LIGHT)
     }
 }

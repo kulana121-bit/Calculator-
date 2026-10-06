@@ -97,7 +97,7 @@ fun SettingsScreen(
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
                     .testTag("settings_back_btn")

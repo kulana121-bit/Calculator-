@@ -20,7 +20,6 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -58,6 +57,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
@@ -102,12 +102,12 @@ fun LiquidGlassNavBar(
     val outerPaddingHorizontal = if (isLandscape) 90.dp else 18.dp
     val outerPaddingBottom = if (isLandscape) 6.dp else 12.dp
 
-    // Frosted glass capsule background colors matching LiquidGlassCard style
+    // Frosted glass capsule background colors
     val barBgBrush = Brush.verticalGradient(
         colors = if (isLight) {
             listOf(
-                Color.White.copy(alpha = 0.90f),
-                Color.White.copy(alpha = 0.72f)
+                Color.White.copy(alpha = 0.92f),
+                Color.White.copy(alpha = 0.74f)
             )
         } else {
             listOf(
@@ -147,7 +147,7 @@ fun LiquidGlassNavBar(
 
     val tabWidthPx = if (containerWidth > 0) containerWidth.toFloat() / tabCount else 0f
 
-    // Target center X for the bubble
+    // Target center X for the bubble (maps 1:1 to selected tab center)
     val targetCenterX = if (isDragging && containerWidth > 0) {
         dragX.coerceIn(tabWidthPx * 0.5f, containerWidth - tabWidthPx * 0.5f)
     } else {
@@ -155,12 +155,11 @@ fun LiquidGlassNavBar(
     }
 
     // Dual-spring physics: leadX rushes forward, trailX catches up smoothly
-    // creating fluid gooey stretching between old and new positions
     val leadX by animateFloatAsState(
         targetValue = targetCenterX,
         animationSpec = spring(
-            dampingRatio = if (isDragging) 0.88f else 0.76f,
-            stiffness = if (isDragging) 750f else 460f
+            dampingRatio = if (isDragging) 0.88f else 0.78f,
+            stiffness = if (isDragging) 750f else 480f
         ),
         label = "gooeyLeadX"
     )
@@ -169,15 +168,19 @@ fun LiquidGlassNavBar(
         targetValue = targetCenterX,
         animationSpec = spring(
             dampingRatio = if (isDragging) 0.85f else 0.82f,
-            stiffness = if (isDragging) 500f else 260f
+            stiffness = if (isDragging) 500f else 280f
         ),
         label = "gooeyTrailX"
     )
 
-    val bubbleRadiusPx = if (tabWidthPx > 0f) min(tabWidthPx * 0.36f, 26.dp.value * 2.75f) else 0f
-    val blurRadiusPx = with(density) { 24.dp.toPx() }
+    // Accurate bubble dimensions: clean circle (radius ~22dp) fully within the 56dp bar
+    val bubbleRadiusPx = with(density) { 22.dp.toPx() }
+    val bubbleCenterYPx = with(density) { 23.dp.toPx() }
 
-    // Reusable offscreen Bitmap and Canvas to ensure 60fps zero-allocation per frame (works on all API levels)
+    // Controlled blur radius (12dp, NOT 24dp) to avoid any edge smearing
+    val blurRadiusPx = with(density) { 12.dp.toPx() }
+
+    // Reusable offscreen Bitmap and Canvas (zero allocation per frame, compatible with all API levels)
     var offscreenBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var offscreenCanvas by remember { mutableStateOf<AndroidCanvas?>(null) }
 
@@ -189,7 +192,7 @@ fun LiquidGlassNavBar(
         }
     }
 
-    // Blur Paint using universal BlurMaskFilter (supported on all API levels back to Android 10/API 29 and earlier)
+    // Blur Paint for offscreen metaball rendering
     val blurPaint = remember(blurRadiusPx) {
         AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.WHITE
@@ -198,34 +201,42 @@ fun LiquidGlassNavBar(
         }
     }
 
-    // High-contrast alpha threshold Paint using universal ColorMatrixColorFilter
-    // Snaps blurred halo edges into a crisp, organic liquid merge with theme-aware tint
-    val thresholdPaint = remember(theme.primaryAccent, isLight) {
+    // Theme bubble colors
+    val bubbleColor = if (isLight) {
+        theme.primaryAccent.copy(alpha = 0.16f)
+    } else {
+        theme.primaryAccent.copy(alpha = 0.24f)
+    }
+    val ringColor = theme.primaryAccent.copy(alpha = if (isLight) 0.35f else 0.42f)
+
+    // Alpha threshold paint for snapping the blurred gradient into a crisp liquid bridge during motion
+    val thresholdPaint = remember(theme.primaryAccent) {
         AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
             isFilterBitmap = true
-            val bubbleColor = if (isLight) {
-                theme.primaryAccent.copy(alpha = 0.18f)
-            } else {
-                theme.primaryAccent.copy(alpha = 0.26f)
-            }
-            val r = bubbleColor.red * 255f
-            val g = bubbleColor.green * 255f
-            val b = bubbleColor.blue * 255f
-            val a = bubbleColor.alpha
+            val r = theme.primaryAccent.red * 255f
+            val g = theme.primaryAccent.green * 255f
+            val b = theme.primaryAccent.blue * 255f
 
-            val alphaScale = 22f
-            val alphaThreshold = 110f
-            val alphaOffset = -alphaThreshold * alphaScale * a
-
+            // Snap alpha [120..135] to [0..255]
             val matrix = ColorMatrix(floatArrayOf(
                 0f, 0f, 0f, 0f, r,
                 0f, 0f, 0f, 0f, g,
                 0f, 0f, 0f, 0f, b,
-                0f, 0f, 0f, alphaScale * a, alphaOffset
+                0f, 0f, 0f, 18f, -2232f
             ))
             colorFilter = ColorMatrixColorFilter(matrix)
         }
     }
+
+    val drawBitmapPaint = remember(bubbleColor) {
+        AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+            isFilterBitmap = true
+            alpha = (bubbleColor.alpha * 255f).toInt()
+        }
+    }
+
+    // Animation motion check: only run the gooey blur-threshold bridge while actively transitioning
+    val isMoving = isDragging || abs(leadX - targetCenterX) > 1.0f || abs(trailX - targetCenterX) > 1.0f
 
     Box(
         modifier = modifier
@@ -240,15 +251,15 @@ fun LiquidGlassNavBar(
                 .fillMaxWidth()
                 .shadow(
                     elevation = 16.dp,
-                    shape = RoundedCornerShape(30.dp),
+                    shape = RoundedCornerShape(28.dp),
                     spotColor = shadowSpot,
                     ambientColor = shadowAmbient
                 )
-                .clip(RoundedCornerShape(30.dp))
+                .clip(RoundedCornerShape(28.dp))
                 .background(barBgBrush)
                 .border(
                     border = BorderStroke(1.dp, barBorderBrush),
-                    shape = RoundedCornerShape(30.dp)
+                    shape = RoundedCornerShape(28.dp)
                 )
                 .drawBehind {
                     // Subtle 1dp inner top highlight line across the floating capsule
@@ -266,13 +277,13 @@ fun LiquidGlassNavBar(
                         strokeWidth = 1.2f
                     )
                 }
-                .padding(horizontal = 6.dp, vertical = 5.dp)
+                .padding(horizontal = 4.dp, vertical = 2.dp)
         ) {
-            // Interactive Dock Container
+            // Interactive Dock Container (Height: 56dp for ideal proportions and touch targets)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(56.dp)
                     .onSizeChanged { size ->
                         containerWidth = size.width
                         containerHeight = size.height
@@ -318,53 +329,61 @@ fun LiquidGlassNavBar(
                         )
                     }
             ) {
-                // Universal Gooey Selection Bubble (BlurMaskFilter + ColorMatrix thresholding on reused Bitmap)
-                val canvas = offscreenCanvas
-                val bmp = offscreenBitmap
-                if (canvas != null && bmp != null && containerWidth > 0 && containerHeight > 0) {
+                // SELECTION BUBBLE RENDERING:
+                // When moving: draws fluid gooey merge using BlurMaskFilter + thresholding
+                // When idle: draws EXACTLY ONE clean circle hugging the selected tab's icon
+                if (containerWidth > 0 && containerHeight > 0) {
                     Canvas(modifier = Modifier.fillMaxSize()) {
-                        val cy = containerHeight / 2f
-                        val r = bubbleRadiusPx
-
-                        // Clear offscreen bitmap
-                        canvas.drawColor(0, PorterDuff.Mode.CLEAR)
-
-                        // Draw moving/leading bubble and trailing bubble
-                        canvas.drawCircle(leadX, cy, r, blurPaint)
-                        canvas.drawCircle(trailX, cy, r, blurPaint)
-
-                        // Connecting liquid droplet bridge while in transit
-                        if (abs(leadX - trailX) > 1f) {
-                            val midX = (leadX + trailX) / 2f
-                            val midR = r * 0.88f
-                            canvas.drawCircle(midX, cy, midR, blurPaint)
-                        }
-
-                        // Render blurred and alpha-thresholded gooey bubble to screen
-                        drawIntoCanvas { composeCanvas ->
-                            composeCanvas.nativeCanvas.drawBitmap(bmp, 0f, 0f, thresholdPaint)
-                        }
-
-                        // Crisp specular ring when resting on selected tab
-                        if (!isDragging && abs(leadX - trailX) < 2f) {
-                            val ringColor = theme.primaryAccent.copy(alpha = if (isLight) 0.32f else 0.40f)
+                        if (!isMoving) {
+                            // IDLE STATE: Exactly ONE clean bubble on the selected tab
+                            drawCircle(
+                                color = bubbleColor,
+                                radius = bubbleRadiusPx,
+                                center = Offset(targetCenterX, bubbleCenterYPx)
+                            )
                             drawCircle(
                                 color = ringColor,
                                 radius = bubbleRadiusPx,
-                                center = Offset(leadX, cy),
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
+                                center = Offset(targetCenterX, bubbleCenterYPx),
+                                style = Stroke(width = 1.dp.toPx())
                             )
+                        } else {
+                            // MOTION STATE: Gooey metaball bridge between moving positions
+                            val canvas = offscreenCanvas
+                            val bmp = offscreenBitmap
+                            if (canvas != null && bmp != null) {
+                                canvas.drawColor(0, PorterDuff.Mode.CLEAR)
+
+                                // Draw leading bubble and trailing bubble
+                                canvas.drawCircle(leadX, bubbleCenterYPx, bubbleRadiusPx, blurPaint)
+                                canvas.drawCircle(trailX, bubbleCenterYPx, bubbleRadiusPx, blurPaint)
+
+                                // Connective bridge droplet while stretching
+                                if (abs(leadX - trailX) > 4.dp.toPx()) {
+                                    val midX = (leadX + trailX) / 2f
+                                    val midR = bubbleRadiusPx * 0.78f
+                                    canvas.drawCircle(midX, bubbleCenterYPx, midR, blurPaint)
+                                }
+
+                                // Apply threshold filter to snap blurred edges into a crisp liquid contour
+                                canvas.drawBitmap(bmp, 0f, 0f, thresholdPaint)
+
+                                // Render the crisp gooey bubble into dock canvas with correct theme alpha
+                                drawIntoCanvas { composeCanvas ->
+                                    composeCanvas.nativeCanvas.drawBitmap(bmp, 0f, 0f, drawBitmapPaint)
+                                }
+                            }
                         }
                     }
                 }
 
-                // Foreground Navigation Tabs with iOS Magnifier Icon Zoom & Label Fade
+                // Foreground Navigation Tabs: Icon Centered Exactly on Bubble + iOS Magnifier Zoom & Label Fade
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val currentBubbleCenter = (leadX + trailX) / 2f
+                    val currentBubbleCenter = if (isMoving) (leadX + trailX) / 2f else targetCenterX
 
                     AppNavTab.values().forEach { tab ->
                         val isSelected = tab == selectedTab
@@ -373,7 +392,7 @@ fun LiquidGlassNavBar(
                         val tabCenterX = if (tabWidthPx > 0f) (tab.ordinal + 0.5f) * tabWidthPx else 0f
                         val distFromBubble = abs(currentBubbleCenter - tabCenterX)
                         val proximity = if (tabWidthPx > 0f) {
-                            (1f - (distFromBubble / (tabWidthPx * 0.95f))).coerceIn(0f, 1f)
+                            (1f - (distFromBubble / (tabWidthPx * 0.90f))).coerceIn(0f, 1f)
                         } else 0f
                         val targetZoom = 1.0f + 0.18f * (proximity * proximity)
 
@@ -396,15 +415,6 @@ fun LiquidGlassNavBar(
                             label = "navLabelAlpha_${tab.name}"
                         )
 
-                        val iconOffsetY by animateFloatAsState(
-                            targetValue = if (isSelected) -2f else 0f,
-                            animationSpec = spring(
-                                dampingRatio = 0.85f,
-                                stiffness = Spring.StiffnessMedium
-                            ),
-                            label = "navIconOffsetY_${tab.name}"
-                        )
-
                         val tintColor by animateColorAsState(
                             targetValue = if (isSelected) {
                                 theme.primaryAccent
@@ -414,9 +424,8 @@ fun LiquidGlassNavBar(
                             label = "navTint_${tab.name}"
                         )
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
+                        // Each tab has a minimum 48dp touch target (fills full tab column width and dock height)
+                        Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
@@ -432,14 +441,17 @@ fun LiquidGlassNavBar(
                                         currentOnTabSelected(tab)
                                     }
                                 }
-                                .testTag("nav_tab_${tab.name.lowercase()}")
+                                .testTag("nav_tab_${tab.name.lowercase()}"),
+                            contentAlignment = Alignment.TopCenter
                         ) {
+                            // Icon is positioned with its center aligned with the bubble's center Y (23dp)
                             Box(
                                 modifier = Modifier
-                                    .offset(y = iconOffsetY.dp)
+                                    .padding(top = 12.dp)
+                                    .size(22.dp)
                                     .graphicsLayer {
-                                        this.scaleX = iconScale
-                                        this.scaleY = iconScale
+                                        scaleX = iconScale
+                                        scaleY = iconScale
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -447,10 +459,11 @@ fun LiquidGlassNavBar(
                                     imageVector = tab.icon,
                                     contentDescription = tab.title,
                                     tint = tintColor,
-                                    modifier = Modifier.size(21.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
 
+                            // Text label sits cleanly below the icon, fading in only when selected
                             if (labelAlpha > 0.01f) {
                                 Text(
                                     text = tab.title,
@@ -459,7 +472,8 @@ fun LiquidGlassNavBar(
                                     color = tintColor.copy(alpha = labelAlpha),
                                     maxLines = 1,
                                     modifier = Modifier
-                                        .padding(top = 1.dp)
+                                        .align(Alignment.BottomCenter)
+                                        .padding(bottom = 3.dp)
                                         .graphicsLayer {
                                             this.alpha = labelAlpha
                                         }

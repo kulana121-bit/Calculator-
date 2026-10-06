@@ -53,6 +53,11 @@ fun LiquidGlassBackground(
                     )
                 )
 
+                // Skip ambient glows in AMOLED mode for true #000000 pure black pixels
+                if (theme == ThemeMode.AMOLED || theme == ThemeMode.AMOLED_BLACK) {
+                    return@drawBehind
+                }
+
                 // 2. Primary ambient warm glow blob (Top-Right / Upper quadrant)
                 val primaryAlpha = if (isLight) 0.18f else 0.22f
                 val primaryCenter = Offset(x = w * 0.82f, y = h * 0.22f)

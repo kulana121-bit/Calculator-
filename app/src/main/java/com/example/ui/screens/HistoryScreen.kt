@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -53,8 +56,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,10 +82,12 @@ fun HistoryScreen(
 ) {
     val historyList by viewModel.historyList.collectAsState()
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
 
     var searchQuery by remember { mutableStateOf("") }
     var filterFavoritesOnly by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
+    var showExportDialog by remember { mutableStateOf(false) }
     var selectedItemForSheet by remember { mutableStateOf<CalculationEntity?>(null) }
 
     val filteredList = remember(historyList, searchQuery, filterFavoritesOnly) {
@@ -100,7 +107,7 @@ fun HistoryScreen(
             .padding(top = 8.dp, bottom = 8.dp)
     ) {
         // ----------------------------------------------------
-        // Top Header: Title "History" & Favorites / Clear Actions
+        // Top Header: Title "History" & Favorites / Export / Clear Actions
         // ----------------------------------------------------
         Row(
             modifier = Modifier
@@ -111,26 +118,55 @@ fun HistoryScreen(
         ) {
             Column {
                 Text(
-                    text = "History",
+                    text = stringResource(com.example.R.string.history_title),
                     color = theme.textPrimary,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${filteredList.size} calculations",
+                    text = "${filteredList.size} ${stringResource(com.example.R.string.history_calculations_count)}",
                     color = theme.textSecondary,
                     fontSize = 12.sp
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Export / Share History button
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        if (historyList.isEmpty()) {
+                            Toast.makeText(context, context.getString(com.example.R.string.history_empty_export), Toast.LENGTH_SHORT).show()
+                        } else {
+                            showExportDialog = true
+                        }
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
+                        .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
+                        .testTag("history_export_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = stringResource(com.example.R.string.history_export_title),
+                        tint = theme.primaryAccent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Favorites Filter Button
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         filterFavoritesOnly = !filterFavoritesOnly
                     },
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
                         .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
@@ -144,8 +180,6 @@ fun HistoryScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
                 if (historyList.isNotEmpty()) {
                     IconButton(
                         onClick = {
@@ -153,7 +187,7 @@ fun HistoryScreen(
                             showClearDialog = true
                         },
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
                             .border(1.dp, if (theme.isLight) Color(0x0F000000) else Color(0x22FFFFFF), CircleShape)
@@ -161,7 +195,7 @@ fun HistoryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.DeleteSweep,
-                            contentDescription = "Clear all",
+                            contentDescription = stringResource(com.example.R.string.history_clear_all),
                             tint = Color(0xFFFF5252),
                             modifier = Modifier.size(20.dp)
                         )
@@ -201,7 +235,7 @@ fun HistoryScreen(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            text = "Search calculations...",
+                            text = stringResource(com.example.R.string.history_search_placeholder),
                             color = theme.textSecondary.copy(alpha = 0.6f),
                             fontSize = 14.sp
                         )
@@ -409,16 +443,105 @@ fun HistoryScreen(
         }
     }
 
+    // Export / Share Dialog
+    if (showExportDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportDialog = false },
+            title = {
+                Text(
+                    text = stringResource(com.example.R.string.history_export_title),
+                    color = theme.textPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TextButton(
+                        onClick = {
+                            showExportDialog = false
+                            val textContent = buildString {
+                                appendLine("Calculator History")
+                                appendLine("================")
+                                historyList.forEach { item ->
+                                    val dateStr = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(item.timestamp))
+                                    appendLine("[$dateStr] ${item.expression} = ${item.result}")
+                                }
+                            }
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Calculator History")
+                                putExtra(Intent.EXTRA_TEXT, textContent)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, context.getString(com.example.R.string.share_history)))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.textButtonColors(contentColor = theme.primaryAccent)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(stringResource(com.example.R.string.history_export_text), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                        }
+                    }
+
+                    TextButton(
+                        onClick = {
+                            showExportDialog = false
+                            val csvContent = buildString {
+                                appendLine("date,expression,result")
+                                historyList.forEach { item ->
+                                    val dateStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(item.timestamp))
+                                    val escapedExp = item.expression.replace("\"", "\"\"")
+                                    val escapedRes = item.result.replace("\"", "\"\"")
+                                    appendLine("\"$dateStr\",\"$escapedExp\",\"$escapedRes\"")
+                                }
+                            }
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/csv"
+                                putExtra(Intent.EXTRA_SUBJECT, "Calculator History (CSV)")
+                                putExtra(Intent.EXTRA_TEXT, csvContent)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, context.getString(com.example.R.string.share_history)))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.textButtonColors(contentColor = theme.primaryAccent)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(stringResource(com.example.R.string.history_export_csv), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(
+                    onClick = { showExportDialog = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = theme.textSecondary)
+                ) {
+                    Text(stringResource(com.example.R.string.cancel))
+                }
+            },
+            containerColor = if (theme.isLight) Color.White else Color(0xFF242428),
+            shape = RoundedCornerShape(24.dp)
+        )
+    }
+
     // Confirmation Dialog for Clearing All History
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
             title = {
-                Text(text = "Clear All History", color = theme.textPrimary, fontWeight = FontWeight.Bold)
+                Text(text = stringResource(com.example.R.string.history_clear_all), color = theme.textPrimary, fontWeight = FontWeight.Bold)
             },
             text = {
                 Text(
-                    text = "Are you sure you want to delete all stored calculations?",
+                    text = stringResource(com.example.R.string.history_clear_confirm),
                     color = theme.textSecondary
                 )
             },
@@ -430,7 +553,7 @@ fun HistoryScreen(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFF5252))
                 ) {
-                    Text("Clear All", fontWeight = FontWeight.Bold)
+                    Text(stringResource(com.example.R.string.history_clear_btn), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -438,7 +561,7 @@ fun HistoryScreen(
                     onClick = { showClearDialog = false },
                     colors = ButtonDefaults.textButtonColors(contentColor = theme.textSecondary)
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(com.example.R.string.cancel))
                 }
             },
             containerColor = if (theme.isLight) Color.White else Color(0xFF242428),
@@ -491,13 +614,13 @@ private fun HistoryItemCard(
 
                 IconButton(
                     onClick = onToggleFavorite,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         imageVector = if (item.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
                         contentDescription = "Favorite",
                         tint = if (item.isFavorite) Color(0xFFFFB703) else theme.textSecondary.copy(alpha = 0.4f),
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

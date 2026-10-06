@@ -81,13 +81,13 @@ fun AboutScreen(
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(if (theme.isLight) Color.White else Color(0x33FFFFFF))
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = androidx.compose.ui.res.stringResource(com.example.R.string.close),
                     tint = theme.textPrimary
                 )
             }
