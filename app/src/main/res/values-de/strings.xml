@@ -90,6 +90,7 @@
     <string name="voice_offline_unavailable">Offline-Sprachpaket nicht installiert</string>
     <string name="voice_listening">Warte auf Spracheingabe…</string>
     <string name="voice_permission_required">Mikrofonberechtigung für Spracheingabe erforderlich</string>
+    <string name="theme_cream">Creme</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
     <string name="theme_amoled">AMOLED Schwarz</string>

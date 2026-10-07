@@ -90,6 +90,7 @@
     <string name="voice_offline_unavailable">Paquete de voz sin conexión no instalado</string>
     <string name="voice_listening">Escuchando matemáticas…</string>
     <string name="voice_permission_required">Permiso de micrófono requerido para entrada de voz</string>
+    <string name="theme_cream">Crema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
     <string name="theme_amoled">Negro AMOLED</string>

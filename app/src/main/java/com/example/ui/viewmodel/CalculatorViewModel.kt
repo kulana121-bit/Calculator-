@@ -36,7 +36,7 @@ import java.util.Calendar
 
 data class CalculatorUiState(
     val currentTab: AppNavTab = AppNavTab.CALCULATOR,
-    val theme: ThemeMode = ThemeMode.AURORA,
+    val theme: ThemeMode = ThemeMode.CREAM,
     
     // Calculator
     val expression: String = "",
@@ -190,11 +190,15 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
-        val savedThemeName = prefs.getString("pref_theme", ThemeMode.AURORA.name)
-        val loadedTheme = try {
-            ThemeMode.valueOf(savedThemeName ?: ThemeMode.AURORA.name)
-        } catch (e: Exception) {
-            ThemeMode.AURORA
+        val savedThemeName = prefs.getString("pref_theme", null)
+        val loadedTheme = if (savedThemeName != null) {
+            try {
+                ThemeMode.valueOf(savedThemeName)
+            } catch (e: Exception) {
+                ThemeMode.CREAM
+            }
+        } else {
+            ThemeMode.CREAM
         }
 
         val savedAngleMode = prefs.getString("pref_angle_mode", ExpressionEvaluator.AngleMode.DEG.name)

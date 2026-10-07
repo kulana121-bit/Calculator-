@@ -86,6 +86,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        com.example.util.SoundHelper.init(this)
+
         // Restore language setting on app startup
         val prefs = getSharedPreferences("smart_calculator_prefs", MODE_PRIVATE)
         val savedLang = prefs.getString("pref_language", "English") ?: "English"

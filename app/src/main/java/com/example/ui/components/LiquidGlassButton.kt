@@ -87,10 +87,18 @@ fun LiquidGlassButton(
 
     val (bgColor, textColor, borderColor, elevation, shadowSpot) = when (type) {
         CalcButtonType.NUMBER -> {
-            if (isLight) {
+            if (theme == ThemeMode.CREAM) {
                 ButtonColors(
                     bg = Color.White,
-                    text = Color(0xFF1C1C1E),
+                    text = theme.textPrimary,
+                    border = Color(0x126B5843),
+                    elevation = 4.dp,
+                    shadow = Color(0x1F6B5843)
+                )
+            } else if (isLight) {
+                ButtonColors(
+                    bg = Color.White,
+                    text = theme.textPrimary,
                     border = Color(0x0A000000),
                     elevation = 4.dp,
                     shadow = Color(0x12000000)
@@ -106,7 +114,15 @@ fun LiquidGlassButton(
             }
         }
         CalcButtonType.OPERATOR -> {
-            if (isLight) {
+            if (theme == ThemeMode.CREAM) {
+                ButtonColors(
+                    bg = Color.White,
+                    text = theme.textPrimary,
+                    border = Color(0x126B5843),
+                    elevation = 4.dp,
+                    shadow = Color(0x1F6B5843)
+                )
+            } else if (isLight) {
                 ButtonColors(
                     bg = theme.buttonOpColor,
                     text = theme.primaryAccent,
@@ -125,10 +141,18 @@ fun LiquidGlassButton(
             }
         }
         CalcButtonType.FUNCTION, CalcButtonType.ACTION, CalcButtonType.MEMORY -> {
-            if (isLight) {
+            if (theme == ThemeMode.CREAM) {
+                ButtonColors(
+                    bg = Color(0xFFF7F2EA),
+                    text = theme.textPrimary,
+                    border = Color(0x126B5843),
+                    elevation = 4.dp,
+                    shadow = Color(0x1A6B5843)
+                )
+            } else if (isLight) {
                 ButtonColors(
                     bg = Color(0xFFF6F5F2),
-                    text = Color(0xFF1C1C1E),
+                    text = theme.textPrimary,
                     border = Color(0x0A000000),
                     elevation = 3.dp,
                     shadow = Color(0x0F000000)
@@ -144,13 +168,23 @@ fun LiquidGlassButton(
             }
         }
         CalcButtonType.EQUALS -> {
-            ButtonColors(
-                bg = theme.primaryAccent,
-                text = Color.White,
-                border = Color.Transparent,
-                elevation = 6.dp,
-                shadow = theme.primaryAccent.copy(alpha = 0.5f)
-            )
+            if (theme == ThemeMode.CREAM) {
+                ButtonColors(
+                    bg = Color(0xFFF3ECE0),
+                    text = theme.textPrimary,
+                    border = Color(0x1A6B5843),
+                    elevation = 4.dp,
+                    shadow = Color(0x246B5843)
+                )
+            } else {
+                ButtonColors(
+                    bg = theme.primaryAccent,
+                    text = Color.White,
+                    border = Color.Transparent,
+                    elevation = 6.dp,
+                    shadow = theme.primaryAccent.copy(alpha = 0.5f)
+                )
+            }
         }
     }
 
@@ -189,7 +223,7 @@ fun LiquidGlassButton(
                                 haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                             }
                             if (soundEnabled) {
-                                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                                com.example.util.SoundHelper.playClickSound(context)
                             }
                             onClick()
                         },
@@ -200,7 +234,7 @@ fun LiquidGlassButton(
                                 haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                             }
                             if (soundEnabled) {
-                                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                                com.example.util.SoundHelper.playClickSound(context)
                             }
                             onLongClick()
                         }
@@ -216,7 +250,7 @@ fun LiquidGlassButton(
                                 haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                             }
                             if (soundEnabled) {
-                                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                                com.example.util.SoundHelper.playClickSound(context)
                             }
                             onClick()
                         }

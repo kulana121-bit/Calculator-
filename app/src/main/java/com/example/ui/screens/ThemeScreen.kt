@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FilterDrama
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Stream
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +63,7 @@ import com.example.ui.theme.ThemeMode
 import com.example.ui.viewmodel.CalculatorViewModel
 
 fun getThemeTitleRes(theme: ThemeMode): Int = when (theme) {
+    ThemeMode.CREAM -> R.string.theme_cream
     ThemeMode.LIGHT, ThemeMode.AURORA, ThemeMode.ONE_UI_MINT, ThemeMode.ONE_UI_MINT_LIGHT, ThemeMode.IOS_LIGHT, ThemeMode.SOLAR_FLARE, ThemeMode.EMERALD_MINT, ThemeMode.ROSE_GOLD, ThemeMode.FROSTED_GLASS, ThemeMode.RETRO_NEO -> R.string.theme_light
     ThemeMode.DARK, ThemeMode.IOS_DARK, ThemeMode.TITANIUM_DARK -> R.string.theme_dark
     ThemeMode.AMOLED, ThemeMode.AMOLED_BLACK -> R.string.theme_amoled
@@ -152,6 +154,7 @@ private fun ThemePreviewCard(
     val cardShape = RoundedCornerShape(26.dp)
 
     val icon: ImageVector = when (themeItem) {
+        ThemeMode.CREAM -> Icons.Default.Palette
         ThemeMode.LIGHT -> Icons.Default.LightMode
         ThemeMode.DARK -> Icons.Default.DarkMode
         ThemeMode.AMOLED -> Icons.Default.Brightness2

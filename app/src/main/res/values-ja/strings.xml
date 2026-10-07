@@ -90,6 +90,7 @@
     <string name="voice_offline_unavailable">オフライン音声パックが未インストールです</string>
     <string name="voice_listening">数式を聞き取り中…</string>
     <string name="voice_permission_required">音声入力にはマイクの権限が必要です</string>
+    <string name="theme_cream">クリーム</string>
     <string name="theme_light">ライト</string>
     <string name="theme_dark">ダーク</string>
     <string name="theme_amoled">AMOLED ブラック</string>

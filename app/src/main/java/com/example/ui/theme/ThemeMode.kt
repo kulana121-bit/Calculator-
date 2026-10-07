@@ -21,6 +21,29 @@ enum class ThemeMode(
     val textSecondary: Color,
     val isLight: Boolean = false
 ) {
+    CREAM(
+        title = "Cream",
+        description = "Warm cream canvas with soft white frosted glass & taupe accents",
+        primaryAccent = Color(0xFF9E7552),
+        secondaryAccent = Color(0xFFC49A6C),
+        tertiaryAccent = Color(0xFFD4B08C),
+        surfaceGlass = Color(0xF5FAF7F2),
+        surfaceGlassLight = Color(0xFFFFFFFF),
+        borderGlass = Color(0x1F6B5843),
+        backgroundColors = listOf(
+            Color(0xFFEFE8DE),
+            Color(0xFFF5EFE6),
+            Color(0xFFECE4D8)
+        ),
+        buttonNumberColor = Color(0xFFFFFFFF),
+        buttonOpColor = Color(0xFFF7F2EA),
+        buttonFuncColor = Color(0xFFF1EAE0),
+        buttonActionColor = Color(0xFFE4D7C5),
+        textPrimary = Color(0xFF3E362F),
+        textSecondary = Color(0xFF7D7266),
+        isLight = true
+    ),
+
     LIGHT(
         title = "Light",
         description = "Minimal off-white canvas with radiant warm orange highlights",
@@ -471,6 +494,6 @@ enum class ThemeMode(
     }
 
     companion object {
-        val selectableThemes = listOf(LIGHT, DARK, AMOLED, DYNAMIC, CYBER_NEON, NORDIC, MIDNIGHT_LIGHT)
+        val selectableThemes = listOf(CREAM, LIGHT, DARK, AMOLED, DYNAMIC, CYBER_NEON, NORDIC, MIDNIGHT_LIGHT)
     }
 }

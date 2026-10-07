@@ -31,7 +31,12 @@ fun LiquidGlassCard(
 
     // High-end dual-tone gradient background for true liquid glass feel
     val cardBgBrush = Brush.verticalGradient(
-        colors = if (isLight) {
+        colors = if (theme == ThemeMode.CREAM) {
+            listOf(
+                Color(0xFFFCFAF6).copy(alpha = 0.92f),
+                Color(0xFFF7F3EB).copy(alpha = 0.85f)
+            )
+        } else if (isLight) {
             listOf(
                 Color.White.copy(alpha = 0.85f),
                 Color.White.copy(alpha = 0.55f)
@@ -46,7 +51,13 @@ fun LiquidGlassCard(
 
     // Highly polished double-layered border simulating fine light refraction
     val cardBorderBrush = Brush.verticalGradient(
-        colors = if (isLight) {
+        colors = if (theme == ThemeMode.CREAM) {
+            listOf(
+                Color.White.copy(alpha = 0.9f),
+                Color(0x1F6B5843),
+                Color(0x126B5843)
+            )
+        } else if (isLight) {
             listOf(
                 Color.White.copy(alpha = 0.75f),
                 Color.White.copy(alpha = 0.25f),
@@ -61,8 +72,20 @@ fun LiquidGlassCard(
         }
     )
 
-    val shadowSpot = if (isLight) Color(0x10000000) else Color(0x52000000)
-    val shadowAmbient = if (isLight) Color(0x05000000) else Color(0x24000000)
+    val shadowSpot = if (theme == ThemeMode.CREAM) {
+        Color(0x186B5843)
+    } else if (isLight) {
+        Color(0x10000000)
+    } else {
+        Color(0x52000000)
+    }
+    val shadowAmbient = if (theme == ThemeMode.CREAM) {
+        Color(0x0A6B5843)
+    } else if (isLight) {
+        Color(0x05000000)
+    } else {
+        Color(0x24000000)
+    }
 
     Box(
         modifier = modifier

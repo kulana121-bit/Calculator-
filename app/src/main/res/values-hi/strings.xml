@@ -90,6 +90,7 @@
     <string name="voice_offline_unavailable">ऑफ़लाइन वॉइस पैक इंस्टॉल नहीं है</string>
     <string name="voice_listening">समीकरण सुन रहे हैं…</string>
     <string name="voice_permission_required">ध्वनि इनपुट के लिए माइक्रोफ़ोन अनुमति आवश्यक है</string>
+    <string name="theme_cream">क्रीम</string>
     <string name="theme_light">लाइट</string>
     <string name="theme_dark">डार्क</string>
     <string name="theme_amoled">एमोलेड ब्लैक</string>

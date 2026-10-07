@@ -94,6 +94,7 @@ fun LiquidGlassNavBar(
     val density = LocalDensity.current
     val isLight = theme.isLight
     val vibrationEnabled = LocalVibrationEnabled.current
+    val soundEnabled = LocalSoundEnabled.current
 
     val currentTab by rememberUpdatedState(selectedTab)
     val currentOnTabSelected by rememberUpdatedState(onTabSelected)
@@ -437,6 +438,9 @@ fun LiquidGlassNavBar(
                                     if (tab != currentTab) {
                                         if (vibrationEnabled) {
                                             VibrationHelper.tick(context)
+                                        }
+                                        if (soundEnabled) {
+                                            com.example.util.SoundHelper.playClickSound(context)
                                         }
                                         currentOnTabSelected(tab)
                                     }

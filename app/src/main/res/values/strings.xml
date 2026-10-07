@@ -90,6 +90,7 @@
     <string name="voice_offline_unavailable">Offline voice pack not installed</string>
     <string name="voice_listening">Listening for math…</string>
     <string name="voice_permission_required">Microphone permission required for voice input</string>
+    <string name="theme_cream">Cream</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_amoled">AMOLED Black</string>
